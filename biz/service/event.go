@@ -75,6 +75,10 @@ func (svc *EventService) UpdateEventStatus(event_id string, status int64) (*mode
 	if err != nil {
 		return nil, fmt.Errorf("update event status failed: %w", err)
 	}
+	// 将计算积分加入任务队列，异步处理
+	//if status == 1 {
+	//	taskqueue.AddScoreEvent(svc.ctx, constants.EventKey, event_id)
+	//}
 	return info, nil
 }
 func (svc *EventService) UploadEventFile(file *multipart.FileHeader) (string, error) {
@@ -86,7 +90,7 @@ func (svc *EventService) UploadEventFile(file *multipart.FileHeader) (string, er
 	}
 	// 识别图片信息
 	// 暂存本地
-	fileName := fmt.Sprintf("%s_%s", stu_id, time.Now())
+	fileName := fmt.Sprintf("%v_%v", stu_id, time.Now().Unix())
 	err = oss.SaveFile(file, constants.StorePath, fileName)
 	if err != nil {
 		return "", fmt.Errorf("save file failed: %w", err)
