@@ -27,8 +27,8 @@ type Event struct {
 	EventName      string `gorm:"size:200;not null;column:event_name"`
 	EventOrganizer string `gorm:"size:200;not null;column:event_organizer"`
 	EventLevel     string `gorm:"size:20;not null;column:event_level"`
-	EventInfluence string `gorm:"size:10;not null;column:event_influence"`
-	AwardLevel     string `gorm:"size:50;not null;column:award_level"`
+	AwardLevel     string `gorm:"type:enum('特等奖','一等奖','二等奖','三等奖','优秀奖');not null;column:award_level"`
+	AwardContent   string `gorm:"size:100;column:award_content"`
 	MaterialUrl    string `gorm:"size:500;not null;column:material_url"`
 	MaterialStatus string `gorm:"size:20;not null;default:'待审核';column:material_status"`
 	AutoExtracted  bool   `gorm:"not null;default:false;column:auto_extracted"`
@@ -52,4 +52,32 @@ type RecognizedEvent struct {
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	DeletedAt           gorm.DeletedAt `gorm:"index"`
+}
+
+type EventRule struct {
+	RuleId            string         `gorm:"primaryKey;autoIncrement:true;column:rule_id"`
+	RecognizedEventId string         `gorm:"not null;default:0;column:recognized_event_id"`
+	EventLevel        string         `gorm:"size:20;not null;column:event_level"`
+	EventWeight       float64        `gorm:"type:decimal(5,2);not null;column:event_weight"`
+	Integral          int64          `gorm:"not null;column:integral"`
+	RuleDesc          string         `gorm:"size:500;column:rule_desc"`
+	IsEditable        bool           `gorm:"not null;column:is_editable"`
+	AwardLevel        string         `gorm:"size:20;column:award_level"`
+	AwardLevelWeight  float64        `gorm:"type:decimal(5,2);column:award_level_weight"`
+	CreatedAt         time.Time      `gorm:"column:created_at"`
+	UpdatedAt         time.Time      `gorm:"column:updated_at"`
+	DeletedAt         gorm.DeletedAt `gorm:"index;column:deleted_at"`
+}
+
+type ScoreResult struct {
+	ResultId      string         `gorm:"primaryKey;autoIncrement:true;column:result_id"`
+	EventId       string         `gorm:"not null;column:event_id"`
+	UserId        string         `gorm:"not null;column:user_id"`
+	RuleId        string         `gorm:"not null;column:rule_id"`
+	AppealId      string         `gorm:"column:appeal_id"`
+	FinalIntegral float64        `gorm:"type:decimal(10,2);not null;column:final_integral"`
+	Status        string         `gorm:"type:enum('申诉中','正常','申诉完成');not null;default:'正常';column:status"`
+	CreatedAt     time.Time      `gorm:"column:created_at"`
+	UpdatedAt     time.Time      `gorm:"column:updated_at"`
+	DeletedAt     gorm.DeletedAt `gorm:"index;column:deleted_at"`
 }

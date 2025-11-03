@@ -74,5 +74,5 @@ func _examineMw() []app.HandlerFunc {
 
 func _updateeventstatusMw() []app.HandlerFunc {
 	// your code...
-	return auth.Auth(2)
+	return auth.Auth(1)
 }

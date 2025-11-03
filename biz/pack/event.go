@@ -15,7 +15,6 @@ func Event(data *model.Event) *resp.Event {
 		EventName:      data.EventName,
 		EventOrganizer: data.EventOrganizer,
 		EventLevel:     data.EventLevel,
-		EventInfluence: data.EventInfluence,
 		AwardLevel:     data.AwardLevel,
 		AutoExtracted:  data.AutoExtracted,
 		AwardTime:      data.AwardTime,

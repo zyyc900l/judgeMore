@@ -23,6 +23,7 @@ type OpenAIRequest struct {
 
 // CompetitionInfo 使用大写字段名 + 正确 JSON 标签（修正）
 type CompetitionInfo struct {
+	Success      string `json:"success"`
 	EventName    string `json:"event_name"`
 	EventSponsor string `json:"event_sponsor"`
 	EventTime    string `json:"event_time"`
@@ -77,12 +78,13 @@ func CallGLM4VWithImage(ctx context.Context, imagePath string, apiKey string) (*
 
 	prompt := `请从图片中提取以下信息，并以严格的 JSON 格式返回，不要包含任何额外说明、Markdown 或解释：
 {
+  "success": "true/false"
   "event_name": "竞赛全称",
   "event_sponsor": "主办单位",
   "event_time": "竞赛时间（如：2024年5月）",
   "award_level": "获得奖项（如：一等奖）"
 }
-如果某项无法识别，请留空字符串。`
+如果某项无法识别，请留空对应字符串。请注意你需要对图片进行判断，如果你判断图片显然不是荣誉证书或者奖状，无法识别出任何赛事或奖项信息，"success"为"false"，否则返回"true"`
 
 	// 注意：模型必须是 glm-4v（支持视觉）
 	reqBody := OpenAIRequest{

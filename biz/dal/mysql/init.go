@@ -1,7 +1,6 @@
 package mysql
 
 import (
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"judgeMore/pkg/utils"
@@ -29,5 +28,4 @@ func Init() {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(20 * time.Second)
-	hlog.Infof("db init suceess")
 }

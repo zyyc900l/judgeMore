@@ -38,3 +38,20 @@ struct EventList{
      1: required list<Event> items,
      2: required i64 total,          //总数
 }
+struct ScoreRecord{
+    1: string score_id ,
+    2: string event_id ,
+    3: string user_id ,
+    4: string appeal_id,
+    5: string rule_id,
+    6: double final_score,
+    7: string status,
+    8: string created_at,        // 创建时间
+    9: string updated_at,        // 更新时间
+    10: string deleted_at         // 删除时
+}
+struct ScoreRecordList{
+         1: required list<ScoreRecord> items,
+         2: required i64 total,          //总数
+         3: required double sum,
+}

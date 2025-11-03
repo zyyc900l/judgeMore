@@ -113,7 +113,7 @@ func Upload(localFile, filename, userid, origin string) (string, error) {
 	}
 	err = resumeUploader.PutFile(context.Background(), &ret, upToken, key, localFile, &putExtra)
 	if err != nil {
-		return "", errno.Errorf(errno.InterFileProcessErrorCode, "upload file  error%v", err.Error())
+		return "", errno.Errorf(errno.InterFileProcessErrorCode, "upload file error：%v", err.Error())
 	}
 	defer func() {
 		err = os.Remove(localFile)

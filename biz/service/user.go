@@ -112,7 +112,6 @@ func (svc *UserService) SendEmail(ctx context.Context, user *model.User) error {
 	if err != nil {
 		return err
 	}
-	// 发送邮箱
 	//err = utils.MailSendCode(user.Email, code)
 	//if err != nil {
 	//	return err

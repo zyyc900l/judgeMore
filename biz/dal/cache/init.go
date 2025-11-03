@@ -7,7 +7,7 @@ import (
 )
 
 var userCa *redis.Client
-var eventCa *redis.Client
+var scoreCa *redis.Client
 
 func Init() {
 	var err error
@@ -15,7 +15,7 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	eventCa, err = client.NewRedisClient(constants.RedisDBEvent)
+	scoreCa, err = client.NewRedisClient(constants.RedisDBEvent)
 	if err != nil {
 		panic(err)
 	}

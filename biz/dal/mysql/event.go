@@ -31,7 +31,6 @@ func CreateNewEvent(ctx context.Context, event *model.Event) (string, error) {
 		EventName:      event.EventName,
 		AutoExtracted:  event.AutoExtracted,
 		EventOrganizer: event.EventOrganizer,
-		EventInfluence: event.EventInfluence,
 		EventLevel:     event.EventLevel,
 		MaterialUrl:    event.MaterialUrl,
 		MaterialStatus: "待审核",
@@ -62,7 +61,6 @@ func GetEventInfoById(ctx context.Context, event_id string) (*model.Event, error
 	return &model.Event{
 		Uid:            eventInfo.UserId,
 		EventId:        eventInfo.EventId,
-		EventInfluence: eventInfo.EventInfluence,
 		AwardLevel:     eventInfo.AwardLevel,
 		EventLevel:     eventInfo.EventLevel,
 		EventName:      eventInfo.EventName,
@@ -116,7 +114,7 @@ func buildEvent(data *Event) *model.Event {
 	return &model.Event{
 		EventId:        data.EventId,
 		Uid:            data.UserId,
-		EventInfluence: data.EventInfluence,
+		AwardContent:   data.AwardContent,
 		AwardLevel:     data.AwardLevel,
 		EventLevel:     data.EventLevel,
 		EventName:      data.EventName,

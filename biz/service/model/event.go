@@ -11,8 +11,8 @@ type Event struct {
 	EventId        string
 	EventLevel     string
 	RecognizeId    string
-	EventInfluence string
 	AwardLevel     string
+	AwardContent   string
 	Uid            string
 	EventName      string
 	EventOrganizer string

@@ -1,165 +1,13 @@
 /*
  Navicat Premium Dump SQL
-
- Source Server         : db
- Source Server Type    : MySQL
- Source Server Version : 90200 (9.2.0)
- Source Host           : localhost:3306
- Source Schema         : competition
-
- Target Server Type    : MySQL
- Target Server Version : 90200 (9.2.0)
- File Encoding         : 65001
-
- Date: 30/10/2025 09:18:12
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for appeals
+-- 第一步：创建没有外键依赖的基础表
 -- ----------------------------
-DROP TABLE IF EXISTS `appeals`;
-CREATE TABLE `appeals`  (
-                            `appeal_id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-                            `event_id` bigint NOT NULL COMMENT '申诉的材料ID',
-                            `user_id` bigint NOT NULL COMMENT '申诉学生ID',
-                            `appeal_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '申诉类型：分级异议/积分异议',
-                            `appeal_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '申诉理由',
-                            `attachment_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '佐证材料路径',
-                            `status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'pending' COMMENT '状态：pending, approved, rejected',
-                            `handled_by` bigint NULL DEFAULT NULL COMMENT '处理人（辅导员）',
-                            `handled_at` datetime NULL DEFAULT NULL COMMENT '处理时间',
-                            `handled_result` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '处理结果说明',
-                            `appeal_count` int NOT NULL DEFAULT 1 COMMENT '该材料申诉次数',
-                            `created_time` datetime NOT NULL COMMENT '申诉时间',
-                            PRIMARY KEY (`appeal_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '存储学生对审核结果的申诉记录' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for event_rules
--- ----------------------------
-DROP TABLE IF EXISTS `event_rules`;
-CREATE TABLE `event_rules`  (
-                                `rule_id` int NOT NULL AUTO_INCREMENT COMMENT '自增主键',
-                                `event_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '国家级 / 省级 / 校级 / 商业赛事',
-                                `event_influence` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '高 / 中 / 低',
-                                `event_weight` decimal(5, 2) NOT NULL COMMENT '赛事权重系数',
-                                `integral` int NOT NULL COMMENT '对应基础积分',
-                                `rule_desc` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '规则说明',
-                                `is_editable` tinyint NOT NULL COMMENT '1 - 是 / 0 - 否',
-                                `award_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '一级/二级/三级',
-                                `award_level_weight` decimal(5, 2) NULL DEFAULT NULL COMMENT '奖项权重系数',
-                                PRIMARY KEY (`rule_id`) USING BTREE,
-                                UNIQUE INDEX `uk_level_influence`(`event_level` ASC, `event_influence` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '赛事权重规则表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for feedbacks
--- ----------------------------
-DROP TABLE IF EXISTS `feedbacks`;
-CREATE TABLE `feedbacks`  (
-                              `feedback_id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-                              `user_id` bigint NOT NULL COMMENT '提交用户ID',
-                              `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '反馈类型',
-                              `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '反馈内容',
-                              `is_replied` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否已回复',
-                              `reply_content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '回复内容',
-                              `created_time` datetime NOT NULL COMMENT '提交时间',
-                              PRIMARY KEY (`feedback_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '存储用户提交的系统使用反馈' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for integral_results
--- ----------------------------
-DROP TABLE IF EXISTS `integral_results`;
-CREATE TABLE `integral_results`  (
-                                     `result_id` int NOT NULL AUTO_INCREMENT COMMENT '积分计算结果的自增主键',
-                                     `event_id` int NOT NULL COMMENT '与这个积分关联的赛事id',
-                                     `user_id` int NOT NULL COMMENT '与积分相关的学生的用户id',
-                                     `rule_id` int NOT NULL COMMENT '与之相关的赛事权重规则id',
-                                     `final_integral` decimal(10, 2) NOT NULL COMMENT '最终积分',
-                                     `calculation_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '积分计算时间，格式为YYYY-mm-dd  HH：mm：ss',
-                                     `reviewer_id` int NULL DEFAULT NULL COMMENT '审核人id',
-                                     `review_time` datetime NOT NULL COMMENT '审核时间，格式为YYYY-mm-dd  HH：mm：ss',
-                                     PRIMARY KEY (`result_id`) USING BTREE,
-                                     INDEX `rule_id`(`rule_id` ASC) USING BTREE,
-                                     INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-                                     INDEX `idx_event_id`(`event_id` ASC) USING BTREE,
-                                     INDEX `idx_reviewer_id`(`reviewer_id` ASC) USING BTREE,
-                                     CONSTRAINT `integral_results_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `student_events` (`event_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-                                     CONSTRAINT `integral_results_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-                                     CONSTRAINT `integral_results_ibfk_3` FOREIGN KEY (`reviewer_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL ON UPDATE RESTRICT,
-                                     CONSTRAINT `integral_results_ibfk_4` FOREIGN KEY (`rule_id`) REFERENCES `event_rules` (`rule_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '积分计算结果表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for recognized_events
--- ----------------------------
-DROP TABLE IF EXISTS `recognized_events`;
-CREATE TABLE `recognized_events`  (
-                                      `recognized_event_id` int NOT NULL AUTO_INCREMENT COMMENT '主键，唯一标识每条认定赛事记录',
-                                      `college` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '赛事认定的学院归属，支持按学院分类管理',
-                                      `recognized_event_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '认定的竞赛名称，作为学生提交时的匹配依据',
-                                      `organizer` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '主办单位，明确赛事权威性',
-                                      `recognized_event_time` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '竞赛举办时间周期，用于时效性验证',
-                                      `related_majors` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '赛事涉及的专业范围',
-                                      `applicable_majors` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '实际申请认定的专业',
-                                      `recognition_basis` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '认定依据文件或标准',
-                                      `recognized_level` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '官方认定的赛事级别（国家级/省级等）',
-                                      `is_active` tinyint(1) NULL DEFAULT 1 COMMENT '是否生效状态，控制赛事是否可被选择',
-                                      `rule_id` int NOT NULL COMMENT '和赛事权重表相关联',
-                                      `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                      `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                      `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
-                                      PRIMARY KEY (`recognized_event_id`) USING BTREE,
-                                      INDEX `idx_college_level`(`college` ASC, `recognized_level` ASC) USING BTREE,
-                                      INDEX `idx_event_name`(`recognized_event_name` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学院认可的奖项表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Table structure for student_events
--- ----------------------------
-DROP TABLE IF EXISTS `student_events`;
-CREATE TABLE `student_events`  (
-                                   `event_id` int NOT NULL AUTO_INCREMENT COMMENT '赛事材料的自增id',
-                                   `user_id` int NOT NULL COMMENT '关联的学生的用户id',
-                                   `recognized_id` int NULL COMMENT '关联认定赛事ID',
-                                   `event_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '赛事名称',
-                                   `event_organizer` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '赛事主办方',
-                                   `event_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '国家级 / 省级 / 校级 / 商业赛事',
-                                   `event_influence` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '高 / 中 / 低',
-                                   `award_level` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '一等奖 / 二等奖 / 三等奖 / 优秀奖等',
-                                   `award_at` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '奖项时间',
-                                   `material_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '材料上传路径',
-                                   `material_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '待审核' COMMENT '待审核 / 已审核 / 驳回',
-                                   `auto_extracted` tinyint NOT NULL DEFAULT 0 COMMENT '1 - 是 / 0 - 否',
-                                   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                   `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
-                                   PRIMARY KEY (`event_id`) USING BTREE,
-                                   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-                                   INDEX `idx_material_status`(`material_status` ASC) USING BTREE,
-                                   INDEX `idx_recognized_id`(`recognized_id` ASC) USING BTREE,
-                                   CONSTRAINT `student_events_ibfk_2` FOREIGN KEY (`recognized_id`) REFERENCES `recognized_events` (`recognized_event_id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 30000 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学生赛事材料表' ROW_FORMAT = Dynamic;
--- ----------------------------
--- Table structure for system_logs
--- ----------------------------
-DROP TABLE IF EXISTS `system_logs`;
-CREATE TABLE `system_logs`  (
-                                `log_id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-                                `user_id` bigint NOT NULL COMMENT '操作用户',
-                                `action` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作类型',
-                                `target_table` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作表名',
-                                `target_id` bigint NOT NULL COMMENT '操作记录ID',
-                                `old_value` json NULL COMMENT '旧值（JSON格式）',
-                                `new_value` json NULL COMMENT '新值（JSON格式）',
-                                `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作IP',
-                                `created_time` datetime NOT NULL COMMENT '操作时间',
-                                PRIMARY KEY (`log_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '记录关键操作日志，用于审计与追踪' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for users
@@ -184,9 +32,163 @@ CREATE TABLE `users`  (
                           UNIQUE INDEX `email_unique`(`email` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户表' ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for recognized_events (移除 rule_id 字段，避免循环引用)
+-- ----------------------------
+DROP TABLE IF EXISTS `recognized_events`;
+CREATE TABLE `recognized_events`  (
+                                      `recognized_event_id` int NOT NULL AUTO_INCREMENT COMMENT '主键，唯一标识每条认定赛事记录',
+                                      `college` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '赛事认定的学院归属，支持按学院分类管理',
+                                      `recognized_event_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '认定的竞赛名称，作为学生提交时的匹配依据',
+                                      `organizer` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '主办单位，明确赛事权威性',
+                                      `recognized_event_time` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '竞赛举办时间周期，用于时效性验证',
+                                      `related_majors` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '赛事涉及的专业范围',
+                                      `applicable_majors` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '实际申请认定的专业',
+                                      `recognition_basis` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '认定依据文件或标准',
+                                      `recognized_level` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '官方认定的赛事级别（国际级|国家级|省级|校级）',
+                                      `is_active` tinyint(1) NULL DEFAULT 1 COMMENT '是否生效状态，控制赛事是否可被选择',
+                                      `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                      `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                      `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
+                                      PRIMARY KEY (`recognized_event_id`) USING BTREE,
+                                      INDEX `idx_college_level`(`college` ASC, `recognized_level` ASC) USING BTREE,
+                                      INDEX `idx_event_name`(`recognized_event_name` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 0 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学院认可的奖项表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for event_rules
+-- ----------------------------
+DROP TABLE IF EXISTS `event_rules`;
+CREATE TABLE `event_rules`  (
+                                `rule_id` int NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+                                `recognized_event_id` int NULL COMMENT '关联认定赛事ID', -- 改为 NULL，避免默认值问题
+                                `event_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '国际级|国家级|省级|校级',
+                                `event_weight` decimal(5, 2) NOT NULL COMMENT '赛事权重系数',
+                                `integral` int NOT NULL COMMENT '对应基础积分',
+                                `rule_desc` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '规则说明',
+                                `is_editable` tinyint NOT NULL COMMENT '1 - 是 / 0 - 否',
+                                `award_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '特等奖/一等奖/二等奖/三等奖/优秀奖',
+                                `award_level_weight` decimal(5, 2) NULL DEFAULT NULL COMMENT '奖项权重系数',
+                                `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
+                                PRIMARY KEY (`rule_id`) USING BTREE,
+                                INDEX `idx_recognized_event_id`(`recognized_event_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '赛事权重规则表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- 第二步：创建依赖上述表的外键表
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for student_events
+-- ----------------------------
+DROP TABLE IF EXISTS `student_events`;
+CREATE TABLE `student_events`  (
+                                   `event_id` int NOT NULL AUTO_INCREMENT COMMENT '赛事材料的自增id',
+                                   `user_id` int NOT NULL COMMENT '关联的学生的用户id',
+                                   `recognized_id` int NULL COMMENT '关联认定赛事ID',
+                                   `event_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '赛事名称',
+                                   `event_organizer` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '赛事主办方',
+                                   `event_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '国际级|国家级|省级|校级',
+                                   `award_level`  varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT'特等奖|一等奖|二等奖|三等奖|优秀奖',
+                                   `award_content` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '奖项具体内容',
+                                   `award_at` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '奖项时间',
+                                   `material_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '材料上传路径',
+                                   `material_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '待审核' COMMENT '待审核 / 已审核 / 驳回',
+                                   `auto_extracted` tinyint NOT NULL DEFAULT 0 COMMENT '1 - 是 / 0 - 否',
+                                   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                   `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
+                                   PRIMARY KEY (`event_id`) USING BTREE,
+                                   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+                                   INDEX `idx_material_status`(`material_status` ASC) USING BTREE,
+                                   INDEX `idx_recognized_id`(`recognized_id` ASC) USING BTREE,
+                                   CONSTRAINT `student_events_ibfk_2` FOREIGN KEY (`recognized_id`) REFERENCES `recognized_events` (`recognized_event_id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 30000 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '学生赛事材料表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for appeals
+-- ----------------------------
+DROP TABLE IF EXISTS `appeals`;
+CREATE TABLE `appeals`  (
+                            `appeal_id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+                            `event_id` bigint NOT NULL COMMENT '申诉的材料ID',
+                            `user_id` bigint NOT NULL COMMENT '申诉学生ID',
+                            `appeal_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '申诉类型：分级异议/积分异议',
+                            `appeal_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '申诉理由',
+                            `attachment_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '佐证材料路径',
+                            `status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'pending' COMMENT '状态：pending, approved, rejected',
+                            `handled_by` bigint NULL DEFAULT NULL COMMENT '处理人（辅导员）',
+                            `handled_at` datetime NULL DEFAULT NULL COMMENT '处理时间',
+                            `handled_result` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '处理结果说明',
+                            `appeal_count` int NOT NULL DEFAULT 1 COMMENT '该材料申诉次数',
+                            `created_time` datetime NOT NULL COMMENT '申诉时间',
+                            PRIMARY KEY (`appeal_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '存储学生对审核结果的申诉记录' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- 第三步：创建依赖最多的表
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for integral_results
+-- ----------------------------
+DROP TABLE IF EXISTS `integral_results`;
+CREATE TABLE `integral_results`  (
+                                     `result_id` int NOT NULL AUTO_INCREMENT COMMENT '积分计算结果的自增主键',
+                                     `event_id` int NOT NULL COMMENT '与这个积分关联的赛事id',
+                                     `user_id` int NOT NULL COMMENT '与积分相关的学生的用户id',
+                                     `rule_id` int NOT NULL COMMENT '与之相关的赛事权重规则id',
+                                     `appeal_id` varchar(50) NULL DEFAULT NULL COMMENT '申诉ID',
+                                     `final_integral` decimal(10, 2) NOT NULL COMMENT '最终积分',
+                                     `status` enum('申诉中','正常','申诉完成') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '正常' COMMENT '状态：申诉中、正常、申诉完成',
+                                     `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                     `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                     `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
+                                     PRIMARY KEY (`result_id`) USING BTREE,
+                                     INDEX `rule_id`(`rule_id` ASC) USING BTREE,
+                                     INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+                                     INDEX `idx_event_id`(`event_id` ASC) USING BTREE,
+                                     INDEX `idx_appeal_id`(`appeal_id` ASC) USING BTREE,
+                                     INDEX `idx_status`(`status` ASC) USING BTREE,
+                                     CONSTRAINT `integral_results_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `student_events` (`event_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+                                     CONSTRAINT `integral_results_ibfk_4` FOREIGN KEY (`rule_id`) REFERENCES `event_rules` (`rule_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '积分计算结果表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for feedbacks
+-- ----------------------------
+DROP TABLE IF EXISTS `feedbacks`;
+CREATE TABLE `feedbacks`  (
+                              `feedback_id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+                              `user_id` bigint NOT NULL COMMENT '提交用户ID',
+                              `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '反馈类型',
+                              `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '反馈内容',
+                              `is_replied` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否已回复',
+                              `reply_content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '回复内容',
+                              `created_time` datetime NOT NULL COMMENT '提交时间',
+                              PRIMARY KEY (`feedback_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '存储用户提交的系统使用反馈' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for system_logs
+-- ----------------------------
+DROP TABLE IF EXISTS `system_logs`;
+CREATE TABLE `system_logs`  (
+                                `log_id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+                                `user_id` bigint NOT NULL COMMENT '操作用户',
+                                `action` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作类型',
+                                `target_table` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作表名',
+                                `target_id` bigint NOT NULL COMMENT '操作记录ID',
+                                `old_value` json NULL COMMENT '旧值（JSON格式）',
+                                `new_value` json NULL COMMENT '新值（JSON格式）',
+                                `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '操作IP',
+                                `created_time` datetime NOT NULL COMMENT '操作时间',
+                                PRIMARY KEY (`log_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '记录关键操作日志，用于审计与追踪' ROW_FORMAT = Dynamic;
+
 SET FOREIGN_KEY_CHECKS = 1;
-
-
 
 INSERT INTO `recognized_events` (
     `college`,
@@ -198,185 +200,221 @@ INSERT INTO `recognized_events` (
     `recognition_basis`,
     `recognized_level`,
     `is_active`,
-    `rule_id`,
     `created_at`,
     `updated_at`,
     `deleted_at`
 ) VALUES
-      ('电气', '“台达杯”高校自动化设计大赛', '教育部高等学校自动化类专业教学指导委员会、中国自动化学会', '每年7月至8月', '不限', '自动化', '教育部专业教学指导委员会、国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('电气', '全国大学生等离子体科技创新竞赛', '中国电工技术学会', '每年5-6月初赛，8-9月决赛', '理工科各专业', '电气工程及其自动化', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('机械', '全国大学生机械创新设计大赛', '全国大学生机械创新设计大赛组委会', '偶数年7-8月份', '机械设计制造及其自动化、车辆工程、材料成型及控制工程', '机械设计制造及其自动化', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('机械', '国际大学生工程力学竞赛（亚洲赛区）（个人赛）', '国际大学生工程力学竞赛（亚洲赛区）组委会', '每年12月份-1月份 决赛次年4-5月份', '工科各专业', '机械设计制造及其自动化', '国际组织', '国际级', 1, 0, NOW(), NOW(), NULL),
-      ('机械', 'Students International Olympiad on MECHANISM AND MACHINE SCIENCE', 'International Federation for the Promotion of Mechanism and Machine Science (IFTOMM)', '一般偶数年的下半年', '机械制造及其自动化', '机械制造及其自动化', '国际级学术团体', '国际级', 1, 0, NOW(), NOW(), NULL),
-      ('机械', '中国大学生方程式汽车大赛（简称“中国FSC”）', '中国汽车工程学会', '10、11月份', '车辆工程、机械设计及其自动化、材料成型与控制工程、电子信息、电气工程及自动化、市场营销、工业设计', '车辆工程', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('机械', '中国高校智能机器人创意大赛', '中国高等教育学会', '每年4月', '机械工程、计算机、自动化控制、信息技术等', '机器人工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('机械', '全国大学生金相技能大赛', '教育部高等学校材料类专业教学指导委员会', '10月', '材料成型及控制工程 材料科学与工程', '材料成型及控制工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('数统', '美国大学生数学建模竞赛（MCM/ICM）', '美国数学及其应用联合会', '每年2月', '所有专业', '信息与计算科学', '美国数学及其应用联合会', '国际级', 1, 0, NOW(), NOW(), NULL),
-      ('数统', '全国大学生统计建模大赛', '中国统计教育学会、教育部高等学校统计学专业教学指导委员会、全国应用统计专业学位研究生教育指导委员会', '每两年的5-6月', '理工经管文专业', '应用数学', '教育部专业教学指导委员会、国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('数统', '“中国电机工程学会杯”全国大学生电工数学建模竞赛', '中国电机工程学会、中国电机工程学会电工数学专业委员会', '每年的5-6月之间', '工科与理科专业', '应用数学', '国家级学会分会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '中国高校计算机大赛--网络技术挑战赛', '教育部高等学校计算机类专业教学指导委员会、教育部高等学校软件工程专业教学指导委员会、教育部高等学校大学计算机课程教学指导委员会', '2020年10月23-25日', '计算机类、电气信息类和其他相关专业', '计算机科学与技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', 'CCF大数据与计算智能大赛', '中国计算机学会', '每年10-12月', '计算机科学与技术、人工智能、数据科学与大数据、信息安全、网络工程、软件工程、电子信息', '计算机科学与技术', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '“中国软件杯”大学生软件设计大赛', '工业和信息化部、教育部等', '每年5月', '各专业', '计算机科学与技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '泛珠三角+大学生计算机作品赛', '全国高等学校计算机教育研究会、部分省级计算机学会', '每年7月', '各专业', '计算机科学与技术', '省级学会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '蓝桥杯全国软件和信息技术专业人才大赛', '工业和信息化部人才交流中心', '每年5月', '计算机、软件工程等理工专业', '软件工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', 'CCF大学生计算机系统与程序设计竞赛', '中国计算机学会', '每年10月份', '软件工程、计算机科学与技术', '软件工程', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '世界大学生超级计算机竞赛（ASC）', '亚洲超级计算机协会', '每年11月至次年5月', '计算机类、软件工程类及其他信息相关学科', '网络工程', '国际组织', '国际级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '全国大学生信息安全竞赛——创新能力实践赛', '教育部高等学校网络空间安全专业教学指导委员会', '每年7月到10月', '信息安全、网络工程、计算机科学与技术、软件工程等', '信息安全', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '国家网络安全宣传周福建省网络空间安全技能竞赛（高校学生组暨“黑盾杯”赛项）', '福建省委网信办，福建省教育厅，福建省公安厅', '每年8月到9月', '信息安全、网络工程、计算机科学与技术、软件工程等', '信息安全', '省级行政部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '中国大学生程序设计竞赛（CCPC）', '教育部高等学校计算机类专业教学指导委员会', '每年9-12月', '无专业限制。主要参赛选手为计算机类专业。', '数据科学与大数据技术', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '中国高校计算机大赛——团体程序设计天梯赛', '教育部高等学校计算机类专业教学指导委员会 教育部高等学校软件工程专业教学指导委员会 教育部高等学校大学计算机课程教学指导委员会', '每年5-7月', '无专业限制。主要参赛选手为计算机类专业。', '数据科学与大数据技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '福建省大学生程序设计竞赛', '福建省计算机学会', '每年5或12月', '无专业限制。主要参赛选手为计算机类专业。', '数据科学与大数据技术', '省级学会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '中国高校计算机大赛——微信小程序应用开发赛', '教育部高等学校计算机类专业教学指导委员会、教育部高等学校软件工程专业教学指导委员会、教育部高等学校大学计算机课程教学指导委员会等联合主办', '每年3月', '各专业', '人工智能', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '中国高校计算机大赛——人工智能创意赛', '教育部高等学校计算机类专业教学指导委员会、教育部高等学校软件工程专业教学指导委员会、教育部高等学校大学计算机课程教学指导委员会等联合主办', '每年4月', '各专业', '人工智能', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '全国大学生“互联网+”创新大赛暨“发现杯”全国大学生互联网软件设计大奖赛', '工业和信息化部教育与考试中心', '每年9月', '所有专业', '计算机科学与技术', '工业和信息化部教育与考试中心', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('计数', '中国高校计算机大赛-移动应用创新赛', '全国高等学校计算机教育研究会', '每年5月', '所有专业', '人工智能', '国家级研究会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('化学', '全国大学生化学实验邀请赛', '教育部高等学校化学教育研究中心', '偶数年七月份', '化学', '化学', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('化学', '全国大学生化学实验创新设计竞赛', '教育部高等院校化学类专业教学指导委员会、高等院校国家级实验教学示范中心联席会', '每2年举办一次 10月', '化学类相关专业', '化学', '高等院校国家级实验教学示范中心联席会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('石化', '全国大学生化工实验大赛', '教育部高等学校化工类专业教学指导委员会 中国化工教育协会', '2019.8', '化学工程与工艺', '化学工程与工艺', '国家级行业协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('石化', '全国大学生化工设计竞赛', '中国化工学会 、中国化工教育协会', '每年8月', '化学工程与工艺', '化学工程与工艺', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '全国大学生交通科技大赛', '教育部高等学校交通运输类教学指导委员会 交通工程教学指导分委员会', '每年5月', '交通工程、交通运输、物流工程、数据科学与大数据技术、计算机', '交通运输', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '全国大学生结构设计竞赛', '中国高等教育学会工程教育专业委员会、高等学校土木工程学科专业指导委员会、中国土木工程学会教育工作委员会和教育部科学技术委员会环境与土木水利学部', '每年10月', '土木工程、力学、建筑学等专业', '土木工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '全国大学生结构设计信息技术大赛', '中国土木工程学会教育工作委员会、清华大学', '每年3月', '土木工程', '土木工程', '中国土木工程学会教育工作委员会（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '全国大学生“茅以升公益桥——小桥工程”设计大赛', '共青团交通运输部直属机关委员会、教育部高等学校交通运输类专业教学指导委员会、教育部高等学校土木类专业教学指导委员会、北京茅以升科技教育基金会', '每年11月', '土木工程', '土木工程', '国家级行政管理部门下属单位', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '中南地区高校土木工程专业结构力学竞赛', '华南理工大学、广东省力学学会', '5月下旬 每两年一届', '土木工程及相关专业', '土木工程', '广东省力学学会（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '全国大学生水利创新设计大赛', '教育部高等学校水利类专业教学指导委员会 中国水利教育协会', '7/8月 每两年一届', '水利类相关专业', '水利水电', '国家级行业协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '全国高校大学生测绘技能大赛', '教育部高等学校测绘类专业教学指导委员会 国家测绘地理信息局职业技能鉴定指导中心 中国测绘地理信息学会', '7月 每两年一届', '测绘工程 土木工程', '智能建造', '国家测绘地理信息局职业技能鉴定指导中心、中国测绘地理信息学会（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '全国高校BIM毕业设计创新大赛', '中国软件行业协会', '每年3月-6月', '土木工程、工程管理、市政工程专业', '工程管理', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '全国中高等院校BIM电子招投标大赛', '中国土木工程学会、建筑市场与招投标研究分会', '每年3月-6月', '土建类各专业', '工程管理', '国家级学会分会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '“优路杯”全国BIM 技术大赛', '工业和信息化部人才交流中心', '每年4月-11月', '建筑与土木工程类各专业', '工程管理', '工业和信息化部人才交流中（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '“品茗杯”全国高校BIM应用毕业设计大赛', '中国建设教育协会', '每年3月-6月', '土木工程、工程管理、市政工程专业', '工程管理', '中国建设教育协会（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('土木', '全国移动互联创新  大赛', '中国通信学会、中国移动互联网产业孵化中心', '每年4月-10月', '土木工程、水利水电工程、工程管理、交通运输类、给排水科学与工程、港口航道与海岸工程、智能建造', '港口航道与海岸工程', '中国通信学会（盖章）', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('环安', '全国高等学校安全科学与工程大学生实践与创新作品大赛', '公共安全科学技术学会、全国高校安全工程学术年会委员会', '每年9月', '安全科学与工程类相关专业', '安全工程', '中国职业安全健康协会（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('环安', '全国优秀消防科普宣传教育作品评选大赛', '中国消防协会', '每年10月', '安全科学与工程类相关专业', '安全工程', '国家级行业协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('环安', '全国大学生自然资源科技作品大赛', '中国自然资源学会', '每年4-12月', '人文地理与城乡规划、自然地理学、地理信息科学、环境科学、测绘工程、土地资源管理、海洋科学等地球科学与生态环境领域的诸多专业', '人文地理与城乡规划', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('环安', '全国高等院校大学生乡村规划方案竞赛', '中国城市规划学会乡村规划与建设学术委员会', '2017年至今每年6-12月', '人文地理与城乡规划、城乡规划、建筑学、地理科学、景观设计、园林设计等', '人文地理与城乡规划', '国家级学会分会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('环安', '园冶杯大学生国际竞赛', '园冶杯国际竞赛组委会（近二十家国内外风景园林相关专业院系联合主办）', '每年4月-12月', '人文地理与城乡规划、风景园林、景观设计学（景观建筑设计、景观学）、建筑学、环境艺术设计等相关专业', '人文地理与城乡规划', '近二十家国内外风景园林相关专业院系联合主办', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('环安', '全国高校GIS技能大赛', '中国测绘学会、中国地理信息产业协会、自然资源部职业技能鉴定指导中心、国家地理信息系统工程技术研究中心、地理信息系统产业技术创新战略联盟', '4-12月', '地理信息科学、人文地理与城乡规划、自然地理学、测绘工程、土地资源管理、海洋科学等地球科学与生态环境领域的诸多专业', '人文地理与城乡规划', '国家级行业协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('环安', 'SuperMap杯高校GIS大赛（中国赛区）', '中国地理学会、中国地理信息产业协会', '每年3-11月', '无专业限制，主要为地学类、测绘类、计算机类。', '人文地理与城乡规划', '国家级协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('环安', '中国工程热物理学会燃烧学学术年会优秀科普作品大赛', '中国工程热物理学会 燃烧学分会、国家自然科学基金委 工程科学三处', '每年10月', '安全科学与工程类相关专业 消防工程、热能动力工程等专业', '安全科学与工程', '国家级学会分会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('环安', '国际学生环境与可持续发展大会（ISCES）全球方案挑战赛', '联合国环境规划署（UNEP）等', '每年5-6月', '环境工程、 资源循环科学与工程', '环境工程', '国际组织', '国际级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', 'GMC国际企业管理挑战赛', '欧洲管理发展基金会', '每年10月至次年1月', '全校各专业', '物流管理、物流工程', '国际组织', '国际级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '“长风杯”大数据分析与挖掘竞赛', '中国交通教育研究会', '每年8-11月', '全校各专业', '物流管理、物流工程', '中国交通教育研究会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '全国高校商业精英挑战赛--品牌策划竞赛、会展专业创新创业实践竞赛、国际贸易竞赛、创新创业竞赛', '中国国际商会商业行业商会、中国国际贸易促进委员会商业行业委员会', '每年2月至次年5月', '贸易经济、连锁经营管理、物流管理、工商管理、财务管理等经济及贸易类专业', '物流管理、物流工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '全国大学生物流设计大赛', '教育部高等学校物流类专业教学指导委员会、中国物流与采购联合会', '每年11月至次年4月', '物流类及相关专业', '物流管理、物流工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '全国大学生创新方法应用大赛', '教育部创新方法教学指导分委会、中国高校创新创业学院联盟', '全国总决赛：每年5月；各区域（省）赛：每年1-3月', '全校各专业', '工商管理', '教育部专业教学指导分委员会、 中国高校创新创业学院联盟', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '全国大学生电子商务“创新、创意及创业”挑战赛', '教育部高等学校电子商务专业教学指导委员会', '每年10月到12月', '全校各专业', '电子商务 信息管理与信息系统', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '福建省大学生会计及税务技能创新大赛', '福建省教育厅', '11月或12月', '会计学、财务管理、财政学、金融学等', '会计 财政学', '省级教育主管部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '“学创杯”全国大学生创业综合模拟大赛', '高等学校国家级实验教学示范中心联席会经济与管理学科组', '9月-11月', '工商管理类、经济学类', '会计', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '“新道杯”全国大学生沙盘模拟经营大赛', '高等学校国家级实验教学示范中心联席会经济与管理学科组', '9月-11月', '工商管理类、经济学类、其他专业亦可', '会计', '高等学校国家级实验教学示范中心联席会（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '全国大学生人力资源管理知识技能竞赛（全国总决赛）', '中国人力资源开发研究会', '每年3-11月', '公共事业管理、行政管理', '行政管理； 公共事业管理', '中国人力资源开发研究会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('经管', '全国大学生市场调查与分析大赛', '教育部高等学校统计学类专业教学指导委员会 中国商业统计学会', '5月', '经济类', '统计学', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('生工', '福建省食品安全科普作品大赛', '福建省食品科学技术学会', '9-11月', '食品和生物专业', '食品工程', '省级学会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('生工', '全国食品类专业工程实践训练综合能力竞赛', '教育部高等学校食品科学与工程专业教学指导委员会', '8月', '食品和生物专业', '食品工程', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('生工', 'iGEM国际基因工程机器大赛', '国际基因工程机器大赛基金会', '每年10月-11月', '生物，化学，计算机等', '生物工程', '国际组织', '国际级', 1, 0, NOW(), NOW(), NULL),
-      ('生工', '全国大学生生命科学创新创业大赛', '教育部高等学校生物技术、生物工程类专业教学指导委员会，教育部高等学校食品科学与工程类专业教学指导委员会，高等学校国家级实验教学示范中心联席会等', '每年2月-8月', '生物、食品、医学、药学、环境等', '生物工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('生工', '全国大学生生命科学竞赛', '教育部高等学校大学生物学课程教学指导委员会、教育部高等学校生物科学类专业教学指导委员会、教育部高等学校生物技术与生物工程类专业教学指导委员会 等', '每年9月-次年9月', '生命科学相关领域', '生物工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('外语', '全国口译大赛', '中国翻译协会', '', '英语', '英语专业', '国家级行业协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('外语', '中华全国日语演讲比赛总决赛', '中国教育国际交流协会', '10月', '日语', '日语专业', '国家级行业协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国大学生电子设计竞赛——TI杯模拟电子系统设计专题邀请赛', '中华人民共和国教育部；工业和信息化部；全国大学生电子设计竞赛组委会', '偶数年6-8月（2年一次）', '物信、电气', '电子信息工程', '国家行政管理部门', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国大学生电子设计竞赛——英特尔杯大学生电子设计竞赛嵌入式系统专题邀请赛', '中华人民共和国教育部；工业和信息化部；全国大学生电子设计竞赛组委会', '偶数年6-10月（2年一次）', '物信、电气、计算机', '通信工程', '国家行政管理部门', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '“博创杯”全国大学生嵌入式人工智能设计大赛', '中国电子学会、中国教育部高等学校计算机类专业教学指导委员会', '每年6月份到7月份', '不限', '通信工程', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国大学生物联网设计竞赛', '教育部高等学校计算机类专业教学指导委员会', '每年5-8月', '物联网专业、电子信息类', '物联网工程', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国大学生信息技术创新应用大赛', '陕西省信号处理学会', '每年9、10月', '全部', '通信工程', '省级学会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '3S杯物联网技术与应用“三创”大赛', '中国通信学会，中国电子学会', '每年3月份', '物联网专业、电子信息类', '物联网工程', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国移动互联创新大赛', '中国通信学会、 全国移动互联网产业孵化中心', '每年4月和10月份', '不限', '通信工程', '全国移动互联网产业孵化中心', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', 'iCAN国际创新创业大赛 中国总决赛', '教育部创新创业教育指导委员会、教育部创新方法教学指导分委员会、iCAN国际联盟和全球华人微纳米分子系统学会共同主办', '一年一次', '所有专业', '电子科学与技术', '教育部专业教学指导分委员会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', 'TI杯物联网设计大赛', '教育部高等学校计算机类教学指导委员会', '每年3月至9月', '物联网、电子信息相关专业', '物联网工程', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国大学生FPGA创新设计竞赛', '中国电子学会', '每年7月上旬至12月上旬', '包括（但不限于）电子电气类相关专业（电子、信息、计算机、自动化、电气、仪科、生医等）', '微电子科学与工程', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '福建省大学生光电设计竞赛', '福建省光学学会', '每年7月份', '光电信息科学与工程', '光电信息科学与工程', '省级学会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国大学生光电设计竞赛', '中国光学学会', '每年7月份', '光电信息科学与工程，电子科学与工程', '光电信息科学与工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国大学生集成电路创新创业大赛', '工业和信息化部人才交流中心', '每年1月至8月', '电子信息类所有专业', '微电子科学与工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '中国大学生物理学术竞赛', '中国大学生物理学术竞赛组委会', '每年8月份', '应用物理、数理综合班及其他理工科专业', '应用物理、数理综合班', '竞赛组委会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国大学生物理实验竞赛（创新赛）', '国家级实验教学示范中心联席会、全国高等学校实验物理教学研究会、中国物理学会', '每年的7-12月', '理工科专业', '应用物理学', '国家级实验教学示范中心联席会等', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '全国高校数字艺术设计大赛', '工业和信息化部人才交流中心', '每年3-9月', '艺术类及数字媒体技术专业', '数字媒体技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '中国大学生广告艺术节学院奖', '中国广告协会', '每年4月份', '新闻传播、工商管理、艺术设计、广告学、数字媒体技术、视觉传达设计等专业', '数字媒体技术', '国家级协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '蓝桥杯大赛子赛项—全国高校视觉艺术设计大赛', '工业和信息化部人才交流中心', '每年3-6月', '所有专业', '数字媒体技术', '已列入全国普通高校学科竞赛排行榜（中国高等教育学会发布）的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('物信', '“大唐杯”全国大学生移动通信5G技术大赛', '工业和信息化部人才交流中心、中国通信企业协会', '每年6月', '电子信息类专业', '电子科学与技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '全国高等院校建筑与环境设计专业学生美术作品大奖赛', '教育部高等学校建筑类专业教学指导委员会建筑学专业教学指导分委员会、建筑美术教学工作委员会', '12月', '建筑学、城乡规划、风景园林、环境艺术设计、工业设计等', '城乡规划', '教育部专业教学指导分委员会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '全国高等学校城乡规划专业大学生乡村规划方案竞赛（涵盖乡村规划方案、乡村调研及发展策划报告、乡村设计方案三个单元）', '中国城市规划学会乡村规划与建设学术委员会', '11月', '城乡规划、建筑学、风景园林', '城乡规划', '国家级学会分会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '大数据支持空间规划与设计竞赛', '中国城市科学研究会大数据委员会', '10月', '城乡规划、建筑学、风景园林', '城乡规划', '中国城市科学研究会大数据委员会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '谷雨杯（原REVIT杯）全国大学生可持续建筑设计竞赛', '全国高等学校建筑学学科专业指导委员会建筑数字技术教学工作委员会', '每年２-９月', '建筑学', '建筑学', '教育部专业教学指导委员会分会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '世界大学生建筑设计竞赛', '国际建筑师协会（UIA）', '三年一次', '建筑学', '建筑学', '国际行业协会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '亚洲建筑师协会大学生设计竞赛', '亚洲建筑师协会', '一年一次', '建筑学', '建筑学', '国际行业协会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '园冶杯大学生国际竞赛', '亚洲园林学会、园冶杯风景园林国际竞赛组委会', '每年6-12月', '风景园林、城市规划、建筑、环境艺术等', '风景园林', '近二十家国内外风景园林相关专业院系联合主办', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '中日韩大学生风景园林设计大赛', '中国风景园林学会、日本造园学会、韩国造景学会联合主办', '每年10-12月', '风景园林、环境艺术设计、建筑、旅游管理', '风景园林', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '中国风景园林学会大学生设计竞赛', '中国风景园林学会', '每年8-12月', '风景园林（含景观建筑、园林）专业', '风景园林', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '全国高等学校风景园林专业学生设计竞赛', '中国风景园林学会教育工作委员会、高等教育风景园林学科专业指导委员会、全国风景园林专业学位研究生教育指导委员会和国务院学位委员会风景园林学科评议组', '每年10-12月', '风景园林（含景观建筑、园林）专业', '风景园林', '国家级学会 教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('建筑', '亚洲设计学年奖', 'AAUA亚洲城市与建筑联盟', '每年7-11月', '城乡规划、建筑学、风景园林、环境艺术设计', '风景园林', '国际组织', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('矿业', '全国大学生地质技能竞赛', '中国地质学会', '每两年一次10月左右', '资源勘查工程', '资源勘查工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('矿业', '全国高等学校矿物加工工程专业学生实践作品大赛', '教育部高等学校矿业类专业教学指导委员会', '每年的5-9月间', '矿物加工工程', '矿物加工工程', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('矿业', '全国高校GIS技能大赛', '中国测绘学会、中国地理信息产业协会、自然资源部职业技能鉴定指导中心、国家地理信息系统工程技术研究中心、地理信息系统产业技术创新战略联盟', '每年4月—9月', '不限专业', '资源勘查工程', '中国地理信息产业协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('矿业', '全国高校采矿工程业学生实践作品大赛', '教育部高等学校矿业类专业教学指导委员会', '每年7月-8月', '采矿工程', '采矿工程', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('矿业', '第三届全国地质资料数据创新应用大赛', '全国地质资料馆', '每年2020年4月— 11 月', '不限专业', '资源勘查专业', '全国地质资料馆', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', 'iF设计新秀奖', 'iF Industrie Forum Design（汉诺威工业设计论坛）', '每年1月、7月', '所有专业', '工业设计', '国际组织', '国际级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国可视化与可视分析大会艺术可视化学生竞赛', '中国图象图形学学会', '每年5-11月', '所有专业', '工业设计', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '国际用户体验创新大赛', 'UXPA中国（用户体验专业协会）', '每年2-10月', '所有专业', '工业设计', '国家级行业协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '全国三维数字化创新设计大赛', '全国三维数字化创新设计大赛组委会、中国图学学会、 国家制造业信息化培训中心、全国三维数字化技术推广服务与教育培训联盟（3D动力）、光华设计发展基金会', '每年4-12月', '所有专业', '工业设计', '全国三维数字化创新设计大赛组委会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '全国大学生工业设计大赛福建赛区', '福建省 教育厅', '偶数年（两年一次） 4-12月', '产品设计、工业设计、数字媒体艺术、环境艺术设计、视觉传达设计', '产品设计', '省级行政管理部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '“政和杯”国际竹产品设计大赛', '福建省林业厅', '每年7~12月', '产品设计、工业设计、包装设计、室内家具设计、环境艺术设计、视觉传达设计', '产品设计', '省级行政管理部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '广东省长杯工业设计大赛', '广东省工业和信息化厅', '通过公开招标方式确定', '产品设计、工业设计、包装设计、室内家具设计、环境艺术设计、视觉传达设计', '产品设计', '省级行政管理部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '亚太室内设计精英邀请赛', 'APDC亚太设计中心', '9月', '环境艺术设计', '环境艺术设计', '国际组织', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '“为中国而设计”全国环境艺术设计大展', '中国美术家协会', '10月', '环境艺术设计', '环境艺术设计', '中国美术家协会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '“设计再造”绿色生活艺术创意展', '中国建筑学会', '11月', '环境艺术设计', '环境艺术设计', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '亚洲设计学年奖', '亚洲建筑联盟\\亚洲设计学年奖组委会', '9月', '环境艺术设计', '环境艺术设计', '国际组织', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '“金莲花杯”国际（澳门）大学生设计大赛', '澳门国际设计联合会', '11月', '环境艺术设计', '环境艺术设计', '澳门国际设计联合会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '社会主义核心价值观动画短片扶持创作活动', '国家广播电视总局（国务院直属正部级行政机构）', '6月-9月征集作品至次年6月-11月间公布获奖结果', '动画、数字媒体艺术、数字媒体技术相关专业', '数字媒体艺术', '国家级行政管理部门主办', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '两岸新锐设计竞赛 “华灿奖”', '中国高等教育学会', '每年4-12月间', '视觉传达、数字多媒体设计、产品设计、工艺美术、工业设计', '数字媒体艺术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国大学生原创动漫大赛', '教育部高等学校动画.数字媒体专业教学指导委员会', '每2年于8月至11月间举办', '动画、漫画、数字媒体艺术、数字媒体技术相关专业', '数字媒体艺术', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国好创意暨全国数字艺术设计大赛', '工信部中国电子视像行业协会、全国高等院校计算机基础教育研究会', '每年于5月至12月间举办', '动画、漫画、数字媒体艺术、产品设计、视觉传达相关专业', '数字媒体艺术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '国际大学生雪雕大赛', '教育部高等学校工业设计专业教学指导委员会', '2020', '雕塑', '雕塑', '教育部专业教学指导委员会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国包装创意设计大赛', '中国包装联合会', '11月至次年7月', '所有专业', '视觉传达设计', '中国包装联合会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国大学生广告艺术节学院奖', '中国广告协会', '3月至6月;9月至12月', '所有专业', '视觉传达设计', '国家级行业协会主办', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国之星设计奖', '中国包装联合会', '11月至次年1月', '所有专业', '视觉传达设计', '中国包装联合会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '时报金犊奖', '中国商务广告协会', '3月至10月', '所有专业', '视觉传达设计', '国家级行业协会主办', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '“乔丹杯”中国运动装备设计大赛', '中国服装设计师协会', '3月-10月', '服装设计、鞋包设计', '服装', '国家级行业协会主办', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国时装设计“新人奖”', '中国服装设计师协会', '2月上旬-5月中', '服装设计', '服装', '国家级行业协会主办', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '真皮标志杯', '中国皮革协会', '12月-次年5月', '服装设计', '服装', '国家级行业协会主办', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '福建省工艺美术 “百花奖”', '福建省工艺美术学会、中国轻工业联合会', '一年一次', '工艺美术类', '工艺美术', '省级学会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '福建省高校艺术设计奖', '福建省教育厅', '一年一次', '工艺美术设计类等', '工艺美术', '省级行政管理部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '*全国美术作品展览', '中华人民共和国文化部、中国文学艺术界联合会和中国美术家协会', '五年一届', '中国画；油画；版画；雕塑；水彩、粉画、漆画；陶艺；艺术设计；动漫，综合；壁画；港澳台邀请作品', '漆画', '国家行政管理部门、中国美术家协会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国（厦门）漆画双年展', '中国美术家协会', '每2-3年举办一次', '漆画', '漆画', '中国美术家协会（盖章）', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '全国漆画展', '中国美术家协会', '每2-3年举办一次', '漆画', '漆画', '中国美术家协会（盖章）', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国（宁波.北仑）青年漆画大展', '中国美术家协会', '每2-3年举办一次', '漆画', '漆画', '中国美术家协会（盖章）', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '厦门全国工笔双年展', '中国美术家协会', '每年12月（两年一届）', '中国画', '绘画', '中国美术家协会（盖章）', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '全国青年美术作品展', '中华全国青年联合会、中国文学艺术界联合会、中国美术家协会', '每三年一届', '中国画、油画、漆画', '绘画', '中国美术家协会（盖章）', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '福建省“意之大者”写意画大展', '福建省美术家协会、福建省画院', '一年一届', '中国写意画', '绘画', '福建省美术家协会（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '“八闽丹青”福建省美术双年展', '福建省文学艺术界联合会、福建省美术家协会', '两年一届', '中国画、油画、漆画', '绘画', '福建省文学艺术界联合会、福建省美术家协会（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国好创意暨全国数字艺术设计大赛', '工信部中国电子视像行业协会、全国高等院校计算机基础教育研究会', '每年5月至12月间举办', '动画、数字媒体艺术、产品设计、视觉传达等专业', '数字媒体艺术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '中国国际动漫节金猴奖', '中央广播电视总台主办， 中宣部、国家广播电视总局支持', '每年5月至9月间举办', '动画、数字媒体艺术、数字媒体技术', '数字媒体艺术', '中央广播电视总台', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '米兰设计周-中国高校设计学科师生优秀作品展', '中国高等教育学会设计教育专业委员、中国教育国际交流协会AAP项目管理办公室', '每年1月至9月间举办', '设计类专业等', '视觉传达设计', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('工艺美院', '太湖奖设计大赛', '国家知识产权局、科学技术部、江苏省人民政府', '一年一次', '所有专业', '产品设计', '江苏省人民政府', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('人文', '全国大学生心理辅导课教学竞赛', '教育部高等学校心理学类教学指导委员会、中国心理学会', '每年7-12月', '心理学', '应用心理学', '教育部专业教学指导委员会、国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('人文', '福建省音乐舞蹈节', '福建省文化厅、教育厅', '每三年一次9-11月举行', '音乐学', NULL, '省级行政管理部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('人文', '福建省“金钟花奖”声乐比赛', '福建省文学艺术界联合会', '每两年一次11-12月举行', '音乐学', NULL, '福建省文学艺术界联合会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('人文', '中国音乐小金钟奖长江钢琴全国钢琴比赛', '中国音乐家协会主办', '每年一次8-10月举行', '音乐学', NULL, '中国音乐家协会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('人文', '“敦煌杯”中国民乐（琵琶）艺术大赛', '中国民族管弦乐学会', '每四年一次', '音乐学', '音乐学', '国家级学会', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('人文', '福建省百花文艺奖', '福建省委宣传部', '每年三次', '音乐学', '音乐学', '省级行政管理部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('材料', '全国大学生金相技能大赛', '教育部高等学校材料类专业教学指导委员会', '7月', '材料科学与工程', '材料科学与工程专业', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('材料', '中国大学生材料热处理知识与技能大赛', '教育部高等学校材料类专业教学指导委员会、中国热处理行业协会、中国机械工程学会热处理分会', '5月', '材料科学与工程', '材料科学与工程专业', '中国热处理行业协会（盖章）', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('材料', '大学生“创新 · 绿色 · 科普”材料综合竞赛', '福建省硅酸盐学会', '4-6月', '材料、化学、化工、环境、机械、物理及相关专业全日制本科生', '高分子材料与工程', '省级学会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('机电中心', '中国高校智能机器人创意大赛', '中国高等教育学会', '每年4-6月份', '理工科各专业', '理工科各专业', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('机电中心', '中国机器人大赛暨RoboCup机器人世界杯中国赛', '中国自动化学会', '每年8-9月份', '理工科各专业', '理工科各专业', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, 0, NOW(), NOW(), NULL),
-      ('机电中心', '金砖国家青年创客大赛', '金砖国家工商理事会/ 一带一路暨金砖国家技能发展国际联盟 /中国教育部高等学校工程训练教学指导委员会', '每年暑假', '理工科各专业', '理工科各专业', '国际组织、教育部专业教学指导委员会', '国际级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '福建省运动会', '福建省体育局', '四年一次', '所有专业', '所有专业', '省级行政管理部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中国（全国）青少年 足球联赛 （大学生组）', '全国青少年校园足球工作领导小组办公室、中国大学生体育协会', '每年3-8月份', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中国 （全国） 大学生足球五人制联赛', '全国青少年校园足球工作领导小组办公室、中国大学生体育协会', '每年12月份-次年3月份', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '全国跳绳联赛', '国家体育总局社会指导中心 中国大学生体育协会', '每年10月-次年7月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '全国跳绳锦标赛', '国家体育总局社会指导中心 中国大学生体育协会', '每年5月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中国大学生网球锦标赛', '中国大学生体育协会', '每年4-7月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '全国大学生田径锦标赛', '中国大学生体育协会 中国田径协会', '每年暑假', '所有专业', '所有专业', '中国田径协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '全国救生锦标赛', '国家体育总局游泳运动管理中心、中国游泳协会', '每年9-11月', '所有专业', '所有专业', '中国游泳协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '全国大学生水球锦标赛', '国家体育总局手曲棒垒球运动管理中心、中国大学生体育协', '每年5月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '全国啦啦操联赛', '国家体育总局体操运动管理中心', '每年7月', '所有专业', '所有专业', '国家级行政管理部门下属单位', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '全国高等院校健身气功锦标赛', '国家体育总局健身气功管理中心、安徽省体育局', '每年7月', '所有专业', '所有专业', '安徽省体育局', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中国大学生舞龙舞狮锦标赛', '中国大学生体育协会', '每年暑假', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '全国大学生桥牌锦标赛', '中国大学生体育协会、中国桥牌协会', '每年暑假', '所有专业', '所有专业', '中国桥牌协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '全国桥牌通讯系列赛', '中国桥牌协会', '每 月', '所有专业', '所有专业', '中国桥牌协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中华龙舟 大 赛 （总决赛、分站赛）', '国家体育总局社会体育指导中心、中国龙舟协会', '每年 04月', '所有专业', '所有专业', '国家行政管理部门 中国龙舟协会', '总决赛国家级，分站赛省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中国大学生篮球联赛', '中国大学生体育协会', '每年 5月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中国大学生游泳锦标赛', '中国大学生体育协会', '每年 6月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中国龙舟锦标赛', '中国大学生体育协会', '每年 7月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中国大学生皮划艇（赛艇）锦标赛', '中国大学生体育协会', '每年 10月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('体育部', '中国大学生武术套路锦标赛', '中国大学生体育协会', '每年 6月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('人武部', '‘爱我国防’福建省大学生演讲比赛', '中共福建省委宣传部、福建省教育厅等', '每年 8-12 月', '所有专业', '所有专业', '省级行政部门', '省级', 1, 0, NOW(), NOW(), NULL),
-      ('人武部', '福建省大学生军事技能比武', '福建省教育厅、福建省国防教育办公室', '每年 7月', '所有专业', '所有专业', '省级行政部门', '省级', 1, 0, NOW(), NOW(), NULL);
+      ('电气', '"台达杯"高校自动化设计大赛', '教育部高等学校自动化类专业教学指导委员会、中国自动化学会', '每年7月至8月', '不限', '自动化', '教育部专业教学指导委员会、国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('电气', '全国大学生等离子体科技创新竞赛', '中国电工技术学会', '每年5-6月初赛，8-9月决赛', '理工科各专业', '电气工程及其自动化', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('机械', '全国大学生机械创新设计大赛', '全国大学生机械创新设计大赛组委会', '偶数年7-8月份', '机械设计制造及其自动化、车辆工程、材料成型及控制工程', '机械设计制造及其自动化', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('机械', '国际大学生工程力学竞赛（亚洲赛区）（个人赛）', '国际大学生工程力学竞赛（亚洲赛区）组委会', '每年12月份-1月份 决赛次年4-5月份', '工科各专业', '机械设计制造及其自动化', '国际组织', '国际级', 1, NOW(), NOW(), NULL),
+      ('机械', 'Students International Olympiad on MECHANISM AND MACHINE SCIENCE', 'International Federation for the Promotion of Mechanism and Machine Science (IFTOMM)', '一般偶数年的下半年', '机械制造及其自动化', '机械制造及其自动化', '国际级学术团体', '国际级', 1, NOW(), NOW(), NULL),
+      ('机械', '中国大学生方程式汽车大赛（简称"中国FSC"）', '中国汽车工程学会', '10、11月份', '车辆工程、机械设计及其自动化、材料成型与控制工程、电子信息、电气工程及自动化、市场营销、工业设计', '车辆工程', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('机械', '中国高校智能机器人创意大赛', '中国高等教育学会', '每年4月', '机械工程、计算机、自动化控制、信息技术等', '机器人工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('机械', '全国大学生金相技能大赛', '教育部高等学校材料类专业教学指导委员会', '10月', '材料成型及控制工程 材料科学与工程', '材料成型及控制工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('数统', '美国大学生数学建模竞赛（MCM/ICM）', '美国数学及其应用联合会', '每年2月', '所有专业', '信息与计算科学', '美国数学及其应用联合会', '国际级', 1, NOW(), NOW(), NULL),
+      ('数统', '全国大学生统计建模大赛', '中国统计教育学会、教育部高等学校统计学专业教学指导委员会、全国应用统计专业学位研究生教育指导委员会', '每两年的5-6月', '理工经管文专业', '应用数学', '教育部专业教学指导委员会、国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('数统', '"中国电机工程学会杯"全国大学生电工数学建模竞赛', '中国电机工程学会、中国电机工程学会电工数学专业委员会', '每年的5-6月之间', '工科与理科专业', '应用数学', '国家级学会分会', '省级', 1, NOW(), NOW(), NULL),
+      ('计数', '中国高校计算机大赛--网络技术挑战赛', '教育部高等学校计算机类专业教学指导委员会、教育部高等学校软件工程专业教学指导委员会、教育部高等学校大学计算机课程教学指导委员会', '2020年10月23-25日', '计算机类、电气信息类和其他相关专业', '计算机科学与技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', 'CCF大数据与计算智能大赛', '中国计算机学会', '每年10-12月', '计算机科学与技术、人工智能、数据科学与大数据、信息安全、网络工程、软件工程、电子信息', '计算机科学与技术', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', '"中国软件杯"大学生软件设计大赛', '工业和信息化部、教育部等', '每年5月', '各专业', '计算机科学与技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', '泛珠三角+大学生计算机作品赛', '全国高等学校计算机教育研究会、部分省级计算机学会', '每年7月', '各专业', '计算机科学与技术', '省级学会', '省级', 1, NOW(), NOW(), NULL),
+      ('计数', '蓝桥杯全国软件和信息技术专业人才大赛', '工业和信息化部人才交流中心', '每年5月', '计算机、软件工程等理工专业', '软件工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', 'CCF大学生计算机系统与程序设计竞赛', '中国计算机学会', '每年10月份', '软件工程、计算机科学与技术', '软件工程', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', '世界大学生超级计算机竞赛（ASC）', '亚洲超级计算机协会', '每年11月至次年5月', '计算机类、软件工程类及其他信息相关学科', '网络工程', '国际组织', '国际级', 1, NOW(), NOW(), NULL),
+      ('计数', '全国大学生信息安全竞赛——创新能力实践赛', '教育部高等学校网络空间安全专业教学指导委员会', '每年7月到10月', '信息安全、网络工程、计算机科学与技术、软件工程等', '信息安全', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', '国家网络安全宣传周福建省网络空间安全技能竞赛（高校学生组暨"黑盾杯"赛项）', '福建省委网信办，福建省教育厅，福建省公安厅', '每年8月到9月', '信息安全、网络工程、计算机科学与技术、软件工程等', '信息安全', '省级行政部门', '省级', 1, NOW(), NOW(), NULL),
+      ('计数', '中国大学生程序设计竞赛（CCPC）', '教育部高等学校计算机类专业教学指导委员会', '每年9-12月', '无专业限制。主要参赛选手为计算机类专业。', '数据科学与大数据技术', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', '中国高校计算机大赛——团体程序设计天梯赛', '教育部高等学校计算机类专业教学指导委员会 教育部高等学校软件工程专业教学指导委员会 教育部高等学校大学计算机课程教学指导委员会', '每年5-7月', '无专业限制。主要参赛选手为计算机类专业。', '数据科学与大数据技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', '福建省大学生程序设计竞赛', '福建省计算机学会', '每年5或12月', '无专业限制。主要参赛选手为计算机类专业。', '数据科学与大数据技术', '省级学会', '省级', 1, NOW(), NOW(), NULL),
+      ('计数', '中国高校计算机大赛——微信小程序应用开发赛', '教育部高等学校计算机类专业教学指导委员会、教育部高等学校软件工程专业教学指导委员会、教育部高等学校大学计算机课程教学指导委员会等联合主办', '每年3月', '各专业', '人工智能', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', '中国高校计算机大赛——人工智能创意赛', '教育部高等学校计算机类专业教学指导委员会、教育部高等学校软件工程专业教学指导委员会、教育部高等学校大学计算机课程教学指导委员会等联合主办', '每年4月', '各专业', '人工智能', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('计数', '全国大学生"互联网+"创新大赛暨"发现杯"全国大学生互联网软件设计大奖赛', '工业和信息化部教育与考试中心', '每年9月', '所有专业', '计算机科学与技术', '工业和信息化部教育与考试中心', '省级', 1, NOW(), NOW(), NULL),
+      ('计数', '中国高校计算机大赛-移动应用创新赛', '全国高等学校计算机教育研究会', '每年5月', '所有专业', '人工智能', '国家级研究会', '省级', 1, NOW(), NOW(), NULL),
+      ('化学', '全国大学生化学实验邀请赛', '教育部高等学校化学教育研究中心', '偶数年七月份', '化学', '化学', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('化学', '全国大学生化学实验创新设计竞赛', '教育部高等院校化学类专业教学指导委员会、高等院校国家级实验教学示范中心联席会', '每2年举办一次 10月', '化学类相关专业', '化学', '高等院校国家级实验教学示范中心联席会', '省级', 1, NOW(), NOW(), NULL),
+      ('石化', '全国大学生化工实验大赛', '教育部高等学校化工类专业教学指导委员会 中国化工教育协会', '2019.8', '化学工程与工艺', '化学工程与工艺', '国家级行业协会', '省级', 1, NOW(), NOW(), NULL),
+      ('石化', '全国大学生化工设计竞赛', '中国化工学会 、中国化工教育协会', '每年8月', '化学工程与工艺', '化学工程与工艺', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('土木', '全国大学生交通科技大赛', '教育部高等学校交通运输类教学指导委员会 交通工程教学指导分委员会', '每年5月', '交通工程、交通运输、物流工程、数据科学与大数据技术、计算机', '交通运输', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('土木', '全国大学生结构设计竞赛', '中国高等教育学会工程教育专业委员会、高等学校土木工程学科专业指导委员会、中国土木工程学会教育工作委员会和教育部科学技术委员会环境与土木水利学部', '每年10月', '土木工程、力学、建筑学等专业', '土木工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('土木', '全国大学生结构设计信息技术大赛', '中国土木工程学会教育工作委员会、清华大学', '每年3月', '土木工程', '土木工程', '中国土木工程学会教育工作委员会（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('土木', '全国大学生"茅以升公益桥——小桥工程"设计大赛', '共青团交通运输部直属机关委员会、教育部高等学校交通运输类专业教学指导委员会、教育部高等学校土木类专业教学指导委员会、北京茅以升科技教育基金会', '每年11月', '土木工程', '土木工程', '国家级行政管理部门下属单位', '省级', 1, NOW(), NOW(), NULL),
+      ('土木', '中南地区高校土木工程专业结构力学竞赛', '华南理工大学、广东省力学学会', '5月下旬 每两年一届', '土木工程及相关专业', '土木工程', '广东省力学学会（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('土木', '全国大学生水利创新设计大赛', '教育部高等学校水利类专业教学指导委员会 中国水利教育协会', '7/8月 每两年一届', '水利类相关专业', '水利水电', '国家级行业协会', '省级', 1, NOW(), NOW(), NULL),
+      ('土木', '全国高校大学生测绘技能大赛', '教育部高等学校测绘类专业教学指导委员会 国家测绘地理信息局职业技能鉴定指导中心 中国测绘地理信息学会', '7月 每两年一届', '测绘工程 土木工程', '智能建造', '国家测绘地理信息局职业技能鉴定指导中心、中国测绘地理信息学会（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('土木', '全国高校BIM毕业设计创新大赛', '中国软件行业协会', '每年3月-6月', '土木工程、工程管理、市政工程专业', '工程管理', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('土木', '全国中高等院校BIM电子招投标大赛', '中国土木工程学会、建筑市场与招投标研究分会', '每年3月-6月', '土建类各专业', '工程管理', '国家级学会分会', '省级', 1, NOW(), NOW(), NULL),
+      ('土木', '"优路杯"全国BIM 技术大赛', '工业和信息化部人才交流中心', '每年4月-11月', '建筑与土木工程类各专业', '工程管理', '工业和信息化部人才交流中（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('土木', '"品茗杯"全国高校BIM应用毕业设计大赛', '中国建设教育协会', '每年3月-6月', '土木工程、工程管理、市政工程专业', '工程管理', '中国建设教育协会（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('土木', '全国移动互联创新  大赛', '中国通信学会、中国移动互联网产业孵化中心', '每年4月-10月', '土木工程、水利水电工程、工程管理、交通运输类、给排水科学与工程、港口航道与海岸工程、智能建造', '港口航道与海岸工程', '中国通信学会（盖章）', '国家级', 1, NOW(), NOW(), NULL),
+      ('环安', '全国高等学校安全科学与工程大学生实践与创新作品大赛', '公共安全科学技术学会、全国高校安全工程学术年会委员会', '每年9月', '安全科学与工程类相关专业', '安全工程', '中国职业安全健康协会（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('环安', '全国优秀消防科普宣传教育作品评选大赛', '中国消防协会', '每年10月', '安全科学与工程类相关专业', '安全工程', '国家级行业协会', '省级', 1, NOW(), NOW(), NULL),
+      ('环安', '全国大学生自然资源科技作品大赛', '中国自然资源学会', '每年4-12月', '人文地理与城乡规划、自然地理学、地理信息科学、环境科学、测绘工程、土地资源管理、海洋科学等地球科学与生态环境领域的诸多专业', '人文地理与城乡规划', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('环安', '全国高等院校大学生乡村规划方案竞赛', '中国城市规划学会乡村规划与建设学术委员会', '2017年至今每年6-12月', '人文地理与城乡规划、城乡规划、建筑学、地理科学、景观设计、园林设计等', '人文地理与城乡规划', '国家级学会分会', '省级', 1, NOW(), NOW(), NULL),
+      ('环安', '园冶杯大学生国际竞赛', '园冶杯国际竞赛组委会（近二十家国内外风景园林相关专业院系联合主办）', '每年4月-12月', '人文地理与城乡规划、风景园林、景观设计学（景观建筑设计、景观学）、建筑学、环境艺术设计等相关专业', '人文地理与城乡规划', '近二十家国内外风景园林相关专业院系联合主办', '省级', 1, NOW(), NOW(), NULL),
+      ('环安', '全国高校GIS技能大赛', '中国测绘学会、中国地理信息产业协会、自然资源部职业技能鉴定指导中心、国家地理信息系统工程技术研究中心、地理信息系统产业技术创新战略联盟', '4-12月', '地理信息科学、人文地理与城乡规划、自然地理学、测绘工程、土地资源管理、海洋科学等地球科学与生态环境领域的诸多专业', '人文地理与城乡规划', '国家级行业协会', '省级', 1, NOW(), NOW(), NULL),
+      ('环安', 'SuperMap杯高校GIS大赛（中国赛区）', '中国地理学会、中国地理信息产业协会', '每年3-11月', '无专业限制，主要为地学类、测绘类、计算机类。', '人文地理与城乡规划', '国家级协会', '省级', 1, NOW(), NOW(), NULL),
+      ('环安', '中国工程热物理学会燃烧学学术年会优秀科普作品大赛', '中国工程热物理学会 燃烧学分会、国家自然科学基金委 工程科学三处', '每年10月', '安全科学与工程类相关专业 消防工程、热能动力工程等专业', '安全科学与工程', '国家级学会分会', '省级', 1, NOW(), NOW(), NULL),
+      ('环安', '国际学生环境与可持续发展大会（ISCES）全球方案挑战赛', '联合国环境规划署（UNEP）等', '每年5-6月', '环境工程、 资源循环科学与工程', '环境工程', '国际组织', '国际级', 1, NOW(), NOW(), NULL),
+      ('经管', 'GMC国际企业管理挑战赛', '欧洲管理发展基金会', '每年10月至次年1月', '全校各专业', '物流管理、物流工程', '国际组织', '国际级', 1, NOW(), NOW(), NULL),
+      ('经管', '"长风杯"大数据分析与挖掘竞赛', '中国交通教育研究会', '每年8-11月', '全校各专业', '物流管理、物流工程', '中国交通教育研究会', '省级', 1, NOW(), NOW(), NULL),
+      ('经管', '全国高校商业精英挑战赛--品牌策划竞赛、会展专业创新创业实践竞赛、国际贸易竞赛、创新创业竞赛', '中国国际商会商业行业商会、中国国际贸易促进委员会商业行业委员会', '每年2月至次年5月', '贸易经济、连锁经营管理、物流管理、工商管理、财务管理等经济及贸易类专业', '物流管理、物流工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('经管', '全国大学生物流设计大赛', '教育部高等学校物流类专业教学指导委员会、中国物流与采购联合会', '每年11月至次年4月', '物流类及相关专业', '物流管理、物流工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('经管', '全国大学生创新方法应用大赛', '教育部创新方法教学指导分委会、中国高校创新创业学院联盟', '全国总决赛：每年5月；各区域（省）赛：每年1-3月', '全校各专业', '工商管理', '教育部专业教学指导分委员会、 中国高校创新创业学院联盟', '省级', 1, NOW(), NOW(), NULL),
+      ('经管', '全国大学生电子商务"创新、创意及创业"挑战赛', '教育部高等学校电子商务专业教学指导委员会', '每年10月到12月', '全校各专业', '电子商务 信息管理与信息系统', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('经管', '福建省大学生会计及税务技能创新大赛', '福建省教育厅', '11月或12月', '会计学、财务管理、财政学、金融学等', '会计 财政学', '省级教育主管部门', '省级', 1, NOW(), NOW(), NULL),
+      ('经管', '"学创杯"全国大学生创业综合模拟大赛', '高等学校国家级实验教学示范中心联席会经济与管理学科组', '9月-11月', '工商管理类、经济学类', '会计', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('经管', '"新道杯"全国大学生沙盘模拟经营大赛', '高等学校国家级实验教学示范中心联席会经济与管理学科组', '9月-11月', '工商管理类、经济学类、其他专业亦可', '会计', '高等学校国家级实验教学示范中心联席会（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('经管', '全国大学生人力资源管理知识技能竞赛（全国总决赛）', '中国人力资源开发研究会', '每年3-11月', '公共事业管理、行政管理', '行政管理； 公共事业管理', '中国人力资源开发研究会', '省级', 1, NOW(), NOW(), NULL),
+      ('经管', '全国大学生市场调查与分析大赛', '教育部高等学校统计学类专业教学指导委员会 中国商业统计学会', '5月', '经济类', '统计学', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('生工', '福建省食品安全科普作品大赛', '福建省食品科学技术学会', '9-11月', '食品和生物专业', '食品工程', '省级学会', '省级', 1, NOW(), NOW(), NULL),
+      ('生工', '全国食品类专业工程实践训练综合能力竞赛', '教育部高等学校食品科学与工程专业教学指导委员会', '8月', '食品和生物专业', '食品工程', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('生工', 'iGEM国际基因工程机器大赛', '国际基因工程机器大赛基金会', '每年10月-11月', '生物，化学，计算机等', '生物工程', '国际组织', '国际级', 1, NOW(), NOW(), NULL),
+      ('生工', '全国大学生生命科学创新创业大赛', '教育部高等学校生物技术、生物工程类专业教学指导委员会，教育部高等学校食品科学与工程类专业教学指导委员会，高等学校国家级实验教学示范中心联席会等', '每年2月-8月', '生物、食品、医学、药学、环境等', '生物工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('生工', '全国大学生生命科学竞赛', '教育部高等学校大学生物学课程教学指导委员会、教育部高等学校生物科学类专业教学指导委员会、教育部高等学校生物技术与生物工程类专业教学指导委员会 等', '每年9月-次年9月', '生命科学相关领域', '生物工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('外语', '全国口译大赛', '中国翻译协会', '', '英语', '英语专业', '国家级行业协会', '省级', 1, NOW(), NOW(), NULL),
+      ('外语', '中华全国日语演讲比赛总决赛', '中国教育国际交流协会', '10月', '日语', '日语专业', '国家级行业协会', '省级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国大学生电子设计竞赛——TI杯模拟电子系统设计专题邀请赛', '中华人民共和国教育部；工业和信息化部；全国大学生电子设计竞赛组委会', '偶数年6-8月（2年一次）', '物信、电气', '电子信息工程', '国家行政管理部门', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国大学生电子设计竞赛——英特尔杯大学生电子设计竞赛嵌入式系统专题邀请赛', '中华人民共和国教育部；工业和信息化部；全国大学生电子设计竞赛组委会', '偶数年6-10月（2年一次）', '物信、电气、计算机', '通信工程', '国家行政管理部门', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '"博创杯"全国大学生嵌入式人工智能设计大赛', '中国电子学会、中国教育部高等学校计算机类专业教学指导委员会', '每年6月份到7月份', '不限', '通信工程', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国大学生物联网设计竞赛', '教育部高等学校计算机类专业教学指导委员会', '每年5-8月', '物联网专业、电子信息类', '物联网工程', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国大学生信息技术创新应用大赛', '陕西省信号处理学会', '每年9、10月', '全部', '通信工程', '省级学会', '省级', 1, NOW(), NOW(), NULL),
+      ('物信', '3S杯物联网技术与应用"三创"大赛', '中国通信学会，中国电子学会', '每年3月份', '物联网专业、电子信息类', '物联网工程', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国移动互联创新大赛', '中国通信学会、 全国移动互联网产业孵化中心', '每年4月和10月份', '不限', '通信工程', '全国移动互联网产业孵化中心', '省级', 1, NOW(), NOW(), NULL),
+      ('物信', 'iCAN国际创新创业大赛 中国总决赛', '教育部创新创业教育指导委员会、教育部创新方法教学指导分委员会、iCAN国际联盟和全球华人微纳米分子系统学会共同主办', '一年一次', '所有专业', '电子科学与技术', '教育部专业教学指导分委员会', '省级', 1, NOW(), NOW(), NULL),
+      ('物信', 'TI杯物联网设计大赛', '教育部高等学校计算机类教学指导委员会', '每年3月至9月', '物联网、电子信息相关专业', '物联网工程', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国大学生FPGA创新设计竞赛', '中国电子学会', '每年7月上旬至12月上旬', '包括（但不限于）电子电气类相关专业（电子、信息、计算机、自动化、电气、仪科、生医等）', '微电子科学与工程', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '福建省大学生光电设计竞赛', '福建省光学学会', '每年7月份', '光电信息科学与工程', '光电信息科学与工程', '省级学会', '省级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国大学生光电设计竞赛', '中国光学学会', '每年7月份', '光电信息科学与工程，电子科学与工程', '光电信息科学与工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国大学生集成电路创新创业大赛', '工业和信息化部人才交流中心', '每年1月至8月', '电子信息类所有专业', '微电子科学与工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '中国大学生物理学术竞赛', '中国大学生物理学术竞赛组委会', '每年8月份', '应用物理、数理综合班及其他理工科专业', '应用物理、数理综合班', '竞赛组委会', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国大学生物理实验竞赛（创新赛）', '国家级实验教学示范中心联席会、全国高等学校实验物理教学研究会、中国物理学会', '每年的7-12月', '理工科专业', '应用物理学', '国家级实验教学示范中心联席会等', '省级', 1, NOW(), NOW(), NULL),
+      ('物信', '全国高校数字艺术设计大赛', '工业和信息化部人才交流中心', '每年3-9月', '艺术类及数字媒体技术专业', '数字媒体技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '中国大学生广告艺术节学院奖', '中国广告协会', '每年4月份', '新闻传播、工商管理、艺术设计、广告学、数字媒体技术、视觉传达设计等专业', '数字媒体技术', '国家级协会', '省级', 1, NOW(), NOW(), NULL),
+      ('物信', '蓝桥杯大赛子赛项—全国高校视觉艺术设计大赛', '工业和信息化部人才交流中心', '每年3-6月', '所有专业', '数字媒体技术', '已列入全国普通高校学科竞赛排行榜（中国高等教育学会发布）的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('物信', '"大唐杯"全国大学生移动通信5G技术大赛', '工业和信息化部人才交流中心、中国通信企业协会', '每年6月', '电子信息类专业', '电子科学与技术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('建筑', '全国高等院校建筑与环境设计专业学生美术作品大奖赛', '教育部高等学校建筑类专业教学指导委员会建筑学专业教学指导分委员会、建筑美术教学工作委员会', '12月', '建筑学、城乡规划、风景园林、环境艺术设计、工业设计等', '城乡规划', '教育部专业教学指导分委员会', '省级', 1, NOW(), NOW(), NULL),
+      ('建筑', '全国高等学校城乡规划专业大学生乡村规划方案竞赛（涵盖乡村规划方案、乡村调研及发展策划报告、乡村设计方案三个单元）', '中国城市规划学会乡村规划与建设学术委员会', '11月', '城乡规划、建筑学、风景园林', '城乡规划', '国家级学会分会', '省级', 1, NOW(), NOW(), NULL),
+      ('建筑', '大数据支持空间规划与设计竞赛', '中国城市科学研究会大数据委员会', '10月', '城乡规划、建筑学、风景园林', '城乡规划', '中国城市科学研究会大数据委员会', '省级', 1, NOW(), NOW(), NULL),
+      ('建筑', '谷雨杯（原REVIT杯）全国大学生可持续建筑设计竞赛', '全国高等学校建筑学学科专业指导委员会建筑数字技术教学工作委员会', '每年２-９月', '建筑学', '建筑学', '教育部专业教学指导委员会分会', '省级', 1, NOW(), NOW(), NULL),
+      ('建筑', '世界大学生建筑设计竞赛', '国际建筑师协会（UIA）', '三年一次', '建筑学', '建筑学', '国际行业协会', '国家级', 1, NOW(), NOW(), NULL),
+      ('建筑', '亚洲建筑师协会大学生设计竞赛', '亚洲建筑师协会', '一年一次', '建筑学', '建筑学', '国际行业协会', '国家级', 1, NOW(), NOW(), NULL),
+      ('建筑', '园冶杯大学生国际竞赛', '亚洲园林学会、园冶杯风景园林国际竞赛组委会', '每年6-12月', '风景园林、城市规划、建筑、环境艺术等', '风景园林', '近二十家国内外风景园林相关专业院系联合主办', '省级', 1, NOW(), NOW(), NULL),
+      ('建筑', '中日韩大学生风景园林设计大赛', '中国风景园林学会、日本造园学会、韩国造景学会联合主办', '每年10-12月', '风景园林、环境艺术设计、建筑、旅游管理', '风景园林', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('建筑', '中国风景园林学会大学生设计竞赛', '中国风景园林学会', '每年8-12月', '风景园林（含景观建筑、园林）专业', '风景园林', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('建筑', '全国高等学校风景园林专业学生设计竞赛', '中国风景园林学会教育工作委员会、高等教育风景园林学科专业指导委员会、全国风景园林专业学位研究生教育指导委员会和国务院学位委员会风景园林学科评议组', '每年10-12月', '风景园林（含景观建筑、园林）专业', '风景园林', '国家级学会 教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('建筑', '亚洲设计学年奖', 'AAUA亚洲城市与建筑联盟', '每年7-11月', '城乡规划、建筑学、风景园林、环境艺术设计', '风景园林', '国际组织', '国家级', 1, NOW(), NOW(), NULL),
+      ('矿业', '全国大学生地质技能竞赛', '中国地质学会', '每两年一次10月左右', '资源勘查工程', '资源勘查工程', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('矿业', '全国高等学校矿物加工工程专业学生实践作品大赛', '教育部高等学校矿业类专业教学指导委员会', '每年的5-9月间', '矿物加工工程', '矿物加工工程', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('矿业', '全国高校GIS技能大赛', '中国测绘学会、中国地理信息产业协会、自然资源部职业技能鉴定指导中心、国家地理信息系统工程技术研究中心、地理信息系统产业技术创新战略联盟', '每年4月—9月', '不限专业', '资源勘查工程', '中国地理信息产业协会', '省级', 1, NOW(), NOW(), NULL),
+      ('矿业', '全国高校采矿工程业学生实践作品大赛', '教育部高等学校矿业类专业教学指导委员会', '每年7月-8月', '采矿工程', '采矿工程', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('矿业', '第三届全国地质资料数据创新应用大赛', '全国地质资料馆', '每年2020年4月— 11 月', '不限专业', '资源勘查专业', '全国地质资料馆', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', 'iF设计新秀奖', 'iF Industrie Forum Design（汉诺威工业设计论坛）', '每年1月、7月', '所有专业', '工业设计', '国际组织', '国际级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国可视化与可视分析大会艺术可视化学生竞赛', '中国图象图形学学会', '每年5-11月', '所有专业', '工业设计', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '国际用户体验创新大赛', 'UXPA中国（用户体验专业协会）', '每年2-10月', '所有专业', '工业设计', '国家级行业协会', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '全国三维数字化创新设计大赛', '全国三维数字化创新设计大赛组委会、中国图学学会、 国家制造业信息化培训中心、全国三维数字化技术推广服务与教育培训联盟（3D动力）、光华设计发展基金会', '每年4-12月', '所有专业', '工业设计', '全国三维数字化创新设计大赛组委会', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '全国大学生工业设计大赛福建赛区', '福建省 教育厅', '偶数年（两年一次） 4-12月', '产品设计、工业设计、数字媒体艺术、环境艺术设计、视觉传达设计', '产品设计', '省级行政管理部门', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '"政和杯"国际竹产品设计大赛', '福建省林业厅', '每年7~12月', '产品设计、工业设计、包装设计、室内家具设计、环境艺术设计、视觉传达设计', '产品设计', '省级行政管理部门', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '广东省长杯工业设计大赛', '广东省工业和信息化厅', '通过公开招标方式确定', '产品设计、工业设计、包装设计、室内家具设计、环境艺术设计、视觉传达设计', '产品设计', '省级行政管理部门', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '亚太室内设计精英邀请赛', 'APDC亚太设计中心', '9月', '环境艺术设计', '环境艺术设计', '国际组织', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '"为中国而设计"全国环境艺术设计大展', '中国美术家协会', '10月', '环境艺术设计', '环境艺术设计', '中国美术家协会', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '"设计再造"绿色生活艺术创意展', '中国建筑学会', '11月', '环境艺术设计', '环境艺术设计', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '亚洲设计学年奖', '亚洲建筑联盟\\亚洲设计学年奖组委会', '9月', '环境艺术设计', '环境艺术设计', '国际组织', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '"金莲花杯"国际（澳门）大学生设计大赛', '澳门国际设计联合会', '11月', '环境艺术设计', '环境艺术设计', '澳门国际设计联合会', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '社会主义核心价值观动画短片扶持创作活动', '国家广播电视总局（国务院直属正部级行政机构）', '6月-9月征集作品至次年6月-11月间公布获奖结果', '动画、数字媒体艺术、数字媒体技术相关专业', '数字媒体艺术', '国家级行政管理部门主办', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '两岸新锐设计竞赛 "华灿奖"', '中国高等教育学会', '每年4-12月间', '视觉传达、数字多媒体设计、产品设计、工艺美术、工业设计', '数字媒体艺术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国大学生原创动漫大赛', '教育部高等学校动画.数字媒体专业教学指导委员会', '每2年于8月至11月间举办', '动画、漫画、数字媒体艺术、数字媒体技术相关专业', '数字媒体艺术', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国好创意暨全国数字艺术设计大赛', '工信部中国电子视像行业协会、全国高等院校计算机基础教育研究会', '每年于5月至12月间举办', '动画、漫画、数字媒体艺术、产品设计、视觉传达相关专业', '数字媒体艺术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '国际大学生雪雕大赛', '教育部高等学校工业设计专业教学指导委员会', '2020', '雕塑', '雕塑', '教育部专业教学指导委员会', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国包装创意设计大赛', '中国包装联合会', '11月至次年7月', '所有专业', '视觉传达设计', '中国包装联合会', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国大学生广告艺术节学院奖', '中国广告协会', '3月至6月;9月至12月', '所有专业', '视觉传达设计', '国家级行业协会主办', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国之星设计奖', '中国包装联合会', '11月至次年1月', '所有专业', '视觉传达设计', '中国包装联合会', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '时报金犊奖', '中国商务广告协会', '3月至10月', '所有专业', '视觉传达设计', '国家级行业协会主办', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '"乔丹杯"中国运动装备设计大赛', '中国服装设计师协会', '3月-10月', '服装设计、鞋包设计', '服装', '国家级行业协会主办', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国时装设计"新人奖"', '中国服装设计师协会', '2月上旬-5月中', '服装设计', '服装', '国家级行业协会主办', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '真皮标志杯', '中国皮革协会', '12月-次年5月', '服装设计', '服装', '国家级行业协会主办', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '福建省工艺美术 "百花奖"', '福建省工艺美术学会、中国轻工业联合会', '一年一次', '工艺美术类', '工艺美术', '省级学会', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '福建省高校艺术设计奖', '福建省教育厅', '一年一次', '工艺美术设计类等', '工艺美术', '省级行政管理部门', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '*全国美术作品展览', '中华人民共和国文化部、中国文学艺术界联合会和中国美术家协会', '五年一届', '中国画；油画；版画；雕塑；水彩、粉画、漆画；陶艺；艺术设计；动漫，综合；壁画；港澳台邀请作品', '漆画', '国家行政管理部门、中国美术家协会', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国（厦门）漆画双年展', '中国美术家协会', '每2-3年举办一次', '漆画', '漆画', '中国美术家协会（盖章）', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '全国漆画展', '中国美术家协会', '每2-3年举办一次', '漆画', '漆画', '中国美术家协会（盖章）', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国（宁波.北仑）青年漆画大展', '中国美术家协会', '每2-3年举办一次', '漆画', '漆画', '中国美术家协会（盖章）', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '厦门全国工笔双年展', '中国美术家协会', '每年12月（两年一届）', '中国画', '绘画', '中国美术家协会（盖章）', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '全国青年美术作品展', '中华全国青年联合会、中国文学艺术界联合会、中国美术家协会', '每三年一届', '中国画、油画、漆画', '绘画', '中国美术家协会（盖章）', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '福建省"意之大者"写意画大展', '福建省美术家协会、福建省画院', '一年一届', '中国写意画', '绘画', '福建省美术家协会（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '"八闽丹青"福建省美术双年展', '福建省文学艺术界联合会、福建省美术家协会', '两年一届', '中国画、油画、漆画', '绘画', '福建省文学艺术界联合会、福建省美术家协会（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国好创意暨全国数字艺术设计大赛', '工信部中国电子视像行业协会、全国高等院校计算机基础教育研究会', '每年5月至12月间举办', '动画、数字媒体艺术、产品设计、视觉传达等专业', '数字媒体艺术', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '中国国际动漫节金猴奖', '中央广播电视总台主办， 中宣部、国家广播电视总局支持', '每年5月至9月间举办', '动画、数字媒体艺术、数字媒体技术', '数字媒体艺术', '中央广播电视总台', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '米兰设计周-中国高校设计学科师生优秀作品展', '中国高等教育学会设计教育专业委员、中国教育国际交流协会AAP项目管理办公室', '每年1月至9月间举办', '设计类专业等', '视觉传达设计', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('工艺美院', '太湖奖设计大赛', '国家知识产权局、科学技术部、江苏省人民政府', '一年一次', '所有专业', '产品设计', '江苏省人民政府', '省级', 1, NOW(), NOW(), NULL),
+      ('人文', '全国大学生心理辅导课教学竞赛', '教育部高等学校心理学类教学指导委员会、中国心理学会', '每年7-12月', '心理学', '应用心理学', '教育部专业教学指导委员会、国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('人文', '福建省音乐舞蹈节', '福建省文化厅、教育厅', '每三年一次9-11月举行', '音乐学', NULL, '省级行政管理部门', '省级', 1, NOW(), NOW(), NULL),
+      ('人文', '福建省"金钟花奖"声乐比赛', '福建省文学艺术界联合会', '每两年一次11-12月举行', '音乐学', NULL, '福建省文学艺术界联合会', '省级', 1, NOW(), NOW(), NULL),
+      ('人文', '中国音乐小金钟奖长江钢琴全国钢琴比赛', '中国音乐家协会主办', '每年一次8-10月举行', '音乐学', NULL, '中国音乐家协会', '国家级', 1, NOW(), NOW(), NULL),
+      ('人文', '"敦煌杯"中国民乐（琵琶）艺术大赛', '中国民族管弦乐学会', '每四年一次', '音乐学', '音乐学', '国家级学会', '国家级', 1, NOW(), NOW(), NULL),
+      ('人文', '福建省百花文艺奖', '福建省委宣传部', '每年三次', '音乐学', '音乐学', '省级行政管理部门', '省级', 1, NOW(), NOW(), NULL),
+      ('材料', '全国大学生金相技能大赛', '教育部高等学校材料类专业教学指导委员会', '7月', '材料科学与工程', '材料科学与工程专业', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('材料', '中国大学生材料热处理知识与技能大赛', '教育部高等学校材料类专业教学指导委员会、中国热处理行业协会、中国机械工程学会热处理分会', '5月', '材料科学与工程', '材料科学与工程专业', '中国热处理行业协会（盖章）', '省级', 1, NOW(), NOW(), NULL),
+      ('材料', '大学生"创新 · 绿色 · 科普"材料综合竞赛', '福建省硅酸盐学会', '4-6月', '材料、化学、化工、环境、机械、物理及相关专业全日制本科生', '高分子材料与工程', '省级学会', '省级', 1, NOW(), NOW(), NULL),
+      ('机电中心', '中国高校智能机器人创意大赛', '中国高等教育学会', '每年4-6月份', '理工科各专业', '理工科各专业', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('机电中心', '中国机器人大赛暨RoboCup机器人世界杯中国赛', '中国自动化学会', '每年8-9月份', '理工科各专业', '理工科各专业', '已列入全国普通高校学科竞赛排行榜的统计竞赛项目', '国家级', 1, NOW(), NOW(), NULL),
+      ('机电中心', '金砖国家青年创客大赛', '金砖国家工商理事会/ 一带一路暨金砖国家技能发展国际联盟 /中国教育部高等学校工程训练教学指导委员会', '每年暑假', '理工科各专业', '理工科各专业', '国际组织、教育部专业教学指导委员会', '国际级', 1, NOW(), NOW(), NULL),
+      ('体育部', '福建省运动会', '福建省体育局', '四年一次', '所有专业', '所有专业', '省级行政管理部门', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中国（全国）青少年 足球联赛 （大学生组）', '全国青少年校园足球工作领导小组办公室、中国大学生体育协会', '每年3-8月份', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中国 （全国） 大学生足球五人制联赛', '全国青少年校园足球工作领导小组办公室、中国大学生体育协会', '每年12月份-次年3月份', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '全国跳绳联赛', '国家体育总局社会指导中心 中国大学生体育协会', '每年10月-次年7月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '全国跳绳锦标赛', '国家体育总局社会指导中心 中国大学生体育协会', '每年5月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中国大学生网球锦标赛', '中国大学生体育协会', '每年4-7月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '全国大学生田径锦标赛', '中国大学生体育协会 中国田径协会', '每年暑假', '所有专业', '所有专业', '中国田径协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '全国救生锦标赛', '国家体育总局游泳运动管理中心、中国游泳协会', '每年9-11月', '所有专业', '所有专业', '中国游泳协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '全国大学生水球锦标赛', '国家体育总局手曲棒垒球运动管理中心、中国大学生体育协', '每年5月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '全国啦啦操联赛', '国家体育总局体操运动管理中心', '每年7月', '所有专业', '所有专业', '国家级行政管理部门下属单位', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '全国高等院校健身气功锦标赛', '国家体育总局健身气功管理中心、安徽省体育局', '每年7月', '所有专业', '所有专业', '安徽省体育局', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中国大学生舞龙舞狮锦标赛', '中国大学生体育协会', '每年暑假', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '全国大学生桥牌锦标赛', '中国大学生体育协会、中国桥牌协会', '每年暑假', '所有专业', '所有专业', '中国桥牌协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '全国桥牌通讯系列赛', '中国桥牌协会', '每 月', '所有专业', '所有专业', '中国桥牌协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中华龙舟 大 赛 （总决赛、分站赛）', '国家体育总局社会体育指导中心、中国龙舟协会', '每年 04月', '所有专业', '所有专业', '国家行政管理部门 中国龙舟协会', '总决赛国家级，分站赛省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中国大学生篮球联赛', '中国大学生体育协会', '每年 5月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中国大学生游泳锦标赛', '中国大学生体育协会', '每年 6月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中国龙舟锦标赛', '中国大学生体育协会', '每年 7月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中国大学生皮划艇（赛艇）锦标赛', '中国大学生体育协会', '每年 10月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('体育部', '中国大学生武术套路锦标赛', '中国大学生体育协会', '每年 6月', '所有专业', '所有专业', '中国大学生体育协会', '省级', 1, NOW(), NOW(), NULL),
+      ('人武部', '"爱我国防"福建省大学生演讲比赛', '中共福建省委宣传部、福建省教育厅等', '每年 8-12 月', '所有专业', '所有专业', '省级行政部门', '省级', 1, NOW(), NOW(), NULL),
+      ('人武部', '福建省大学生军事技能比武', '福建省教育厅、福建省国防教育办公室', '每年 7月', '所有专业', '所有专业', '省级行政部门', '省级', 1, NOW(), NOW(), NULL);
+-- 插入测试数据到 event_rules 表
+INSERT INTO `event_rules` (
+    `recognized_event_id`,
+    `event_level`,
+    `event_weight`,
+    `integral`,
+    `rule_desc`,
+    `is_editable`,
+    `award_level`,
+    `award_level_weight`
+) VALUES
+      -- 通用规则（recognized_event_id = 0）
+      (0, '国家级', 1.00, 100, '国家级赛事一等奖通用规则', 0, '一等奖', 1.00),
+      (0, '国家级', 1.00, 80, '国家级赛事二等奖通用规则', 0, '二等奖', 0.80),
+      (0, '国家级', 1.00, 60, '国家级赛事三等奖通用规则', 0, '三等奖', 0.60),
+
+      (0, '省级', 0.80, 80, '省级赛事一等奖通用规则', 0, '一等奖', 1.00),
+      (0, '省级', 0.80, 60, '省级赛事二等奖通用规则', 0, '二等奖', 0.80),
+      (0, '省级', 0.80, 40, '省级赛事三等奖通用规则', 0, '三等奖', 0.60),
+
+      (0, '校级', 0.60, 60, '校级赛事一等奖通用规则', 0, '一等奖', 1.00),
+      (0, '校级', 0.60, 40, '校级赛事二等奖通用规则', 0, '二等奖', 0.80),
+      (0, '校级', 0.60, 20, '校级赛事三等奖通用规则', 0, '三等奖', 0.60),
+
+      -- 特殊赛事规则（有特定的 recognized_event_id）
+      (10, '国家级', 1.20, 120, 'ACM国际大学生程序设计竞赛特殊规则', 0, '一等奖', 1.00),
+      (10, '国家级', 1.20, 100, 'ACM国际大学生程序设计竞赛特殊规则', 0, '二等奖', 0.80),
+      (10, '国家级', 1.20, 80, 'ACM国际大学生程序设计竞赛特殊规则', 0, '三等奖', 0.60),
+
+      (11, '国家级', 1.15, 115, '数学建模竞赛特殊规则', 0, '一等奖', 1.00),
+      (11, '国家级', 1.15, 90, '数学建模竞赛特殊规则', 0, '二等奖', 0.80),
+      (11, '国家级', 1.15, 70, '数学建模竞赛特殊规则', 0, '三等奖', 0.60),
+
+      (12, '省级', 0.90, 90, '省级编程竞赛特殊规则', 0, '一等奖', 1.00),
+      (12, '省级', 0.90, 70, '省级编程竞赛特殊规则', 0, '二等奖', 0.80),
+      (12, '省级', 0.90, 50, '省级编程竞赛特殊规则', 0, '三等奖', 0.60);
+

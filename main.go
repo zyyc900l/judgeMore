@@ -8,6 +8,7 @@ import (
 	"judgeMore/biz/dal"
 	"judgeMore/biz/mw/jwt"
 	"judgeMore/biz/router"
+	"judgeMore/biz/service"
 	"judgeMore/config"
 	"judgeMore/pkg/utils"
 )
@@ -16,6 +17,7 @@ func init() {
 	config.Init("main")
 	dal.Init()
 	jwt.Init()
+	service.Init()
 }
 func main() {
 	listenAddr, err := utils.GetAvailablePort()
