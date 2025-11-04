@@ -36,6 +36,10 @@ hz-%:
 clean:
 	@find . -type d -name "output" -exec rm -rf {} + -print
 
+.PHONY: build
+start:
+	docker build -t judgemore:latest -f docker/Dockerfile .
+
 # 清除所有构建产物、compose 环境和它的数据
 .PHONY: clean-all
 clean-all: clean
