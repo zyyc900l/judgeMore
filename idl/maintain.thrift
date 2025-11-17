@@ -86,7 +86,38 @@ struct UploadRewardResponse {
     2: required string recognized_event_id,
 }
 
-
+// 上传奖项认定的接口
+struct UploadRecognizedRewardRequest{
+    1: required string college //学院
+    2: required string event_name
+    3: required string organizer
+    4: required string event_time
+    5: required string related_majors //赛事涉及的专业范围
+    6: required string applicable_majors //实际申请认定的专业
+    7: required string recognition_basis //认定依据文件或标准
+    8: required string recognized_level
+    9: required string is_active
+}
+struct UploadRecognizedRewardResponse{
+        1: required model.BaseResp base,
+        2: required model.RecognizeReward data,
+}
+// 删除奖项认定的接口
+struct DeleteRecognizeRewardRequest{
+    1: required string recognize_reward_id,
+}
+struct DeleteRecognizeRewardResponse{
+     1: required model.BaseResp base,
+}
+// 查看
+struct QueryRecognizeRewardRequest{
+        1: required i64 page_num,
+        2: required i64 page_size,
+}
+struct QueryRecognizeRewardResponse{
+                1: required model.BaseResp base,
+                2: required model.RecognizeRewardList data,
+}
 
 service maintainService{
      QueryAllCollegeResponse QueryCollege(1: QueryAllCollegeRequest req) (api.get = "/api/admin/colleges"),
@@ -95,6 +126,8 @@ service maintainService{
      UploadCollegeResponse UploadCollege(1: UploadCollegeRequest req) (api.post = "/api/admin/colleges"),
      AddUserResponse AddUser(1:AddUserRequest req)(api.post = "/api/admin/users"),
      AddAdminObjectResponse AddAdminObject(1:AddAdminObjectRequest req)(api.post = "/api/admin/users/permission"),
-     UploadRewardResponse UploadReward(1:UploadRewardRequest req)(api.post = "/api/admin/upload/reward/single")
+     UploadRecognizedRewardResponse UploadRecognizedReward(1:UploadRecognizedRewardRequest req)(api.post="/api/admin/reward/upload"),
+     DeleteRecognizeRewardResponse DeleteRecognizeReward(1:DeleteRecognizeRewardRequest req)(api.delete = "/api/admin/reward/delete"),
+     QueryRecognizeRewardResponse QueryRecognizeReward(1:QueryRecognizeRewardRequest req)(api.get= "/api/admin/reward/query"),
 }
 

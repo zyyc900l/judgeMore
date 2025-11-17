@@ -174,3 +174,23 @@ func (svc *MaintainService) AddAdminRelation(relation *model.Relation) error {
 	taskqueue.AddUpdateInsertStuTask(svc.ctx, constants.StructKey, relation)
 	return nil
 }
+
+func (svc *MaintainService) QueryRecognizedReward(page_num, page_size int64) ([]*model.RecognizedEvent, int64, error) {
+	if page_num <= 0 || page_size <= 0 {
+		return nil, -1, errno.NewErrNo(errno.ParamVerifyErrorCode, "page param no invalid")
+	}
+	data, err := QueryAllRecognizedReward(svc.ctx)
+	if err != nil {
+		return nil, -1, err
+	}
+	count := int64(len(data))
+	startIndex := (page_num - 1) * page_size
+	endIndex := startIndex + page_size
+	if startIndex > count {
+		return nil, 0, nil
+	}
+	if endIndex > count {
+		endIndex = count
+	}
+	return data[startIndex:endIndex], count, nil
+}

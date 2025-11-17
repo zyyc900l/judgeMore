@@ -28,6 +28,12 @@ func Register(r *server.Hertz) {
 			_admin.POST("/users", append(_adduserMw(), maintain.AddUser)...)
 			_users := _admin.Group("/users", _usersMw()...)
 			_users.POST("/permission", append(_addadminobjectMw(), maintain.AddAdminObject)...)
+			{
+				_reward := _admin.Group("/reward", _rewardMw()...)
+				_reward.DELETE("/delete", append(_deleterecognizerewardMw(), maintain.DeleteRecognizeReward)...)
+				_reward.GET("/query", append(_queryrecognizerewardMw(), maintain.QueryRecognizeReward)...)
+				_reward.POST("/upload", append(_uploadrecognizedrewardMw(), maintain.UploadRecognizedReward)...)
+			}
 		}
 	}
 }

@@ -58,6 +58,32 @@ func QueryAllCollege(ctx context.Context) ([]*model.College, error) {
 	return collegeList, nil
 }
 
+// 查询认可奖项的函数
+func QueryAllRecognizedReward(ctx context.Context) ([]*model.RecognizedEvent, error) {
+	exist, err := cache.IsRecognizeEventExist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var recognizedEventList []*model.RecognizedEvent
+	if !exist {
+		// db 载入 redis
+		recognizedEventList, _, err = mysql.QueryRecognizedEvent(ctx)
+		if err != nil {
+			return nil, err
+		}
+		err = cache.RecognizeEventToCache(ctx, recognizedEventList)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		recognizedEventList, err = cache.QueryAllRecognizeEvent(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return recognizedEventList, nil
+}
+
 // 同样提供一个获取权责关系的函数 用于其他业务
 func QueryAllRelation(ctx context.Context, user_id string) ([]*model.Relation, error) {
 	exist, err := cache.IsRelationExist(ctx)

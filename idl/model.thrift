@@ -71,6 +71,25 @@ struct Appeal{
         13: string updated_at,        // 更新时间
         14: string deleted_at         // 删除时
 }
+struct RecognizeReward{
+        1: required string recognize_reward_id
+        2: required string college //学院
+        3: required string event_name
+        4: required string organizer
+        5: required string event_time
+        6: required string related_majors //赛事涉及的专业范围
+        7: required string applicable_majors //实际申请认定的专业
+        8: required string recognition_basis //认定依据文件或标准
+        9: required string recognized_level
+        10: required bool is_active,
+                12: string created_at,        // 创建时间
+                13: string updated_at,        // 更新时间
+                14: string deleted_at         // 删除时
+}
+struct RecognizeRewardList{
+    1: list<RecognizeReward> item,
+    2: i64 total,
+}
 struct AppealList{
     1:required list<Appeal>items,
     2:required i64 total

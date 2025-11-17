@@ -56,3 +56,38 @@ func _addadminobjectMw() []app.HandlerFunc {
 	// your code...
 	return auth.Auth(3)
 }
+
+func _rewardMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _deleterecognizerewardMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _uploadrecognizedrewardMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _uploadMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _reward0Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _uploadrewardMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _queryrecognizerewardMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

@@ -15,6 +15,21 @@ type ScoreRule struct {
 	DeleteAT          int64
 }
 
+type RecognizedEvent struct {
+	RecognizedEventId   string
+	College             string
+	RecognizedEventName string
+	Organizer           string
+	RecognizedEventTime string
+	RelatedMajors       string
+	ApplicableMajors    string
+	RecognitionBasis    string
+	RecognizedLevel     string
+	IsActive            bool
+	CreateAT            int64
+	UpdateAT            int64
+	DeleteAT            int64
+}
 type ScoreRecord struct {
 	ResultId      string  `json:"result_id"`
 	EventId       string  `json:"event_id"`

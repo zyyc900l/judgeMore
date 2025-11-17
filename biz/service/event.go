@@ -190,7 +190,7 @@ func (svc *EventService) UpdateEventLevel(event_id string, level string, appeal_
 }
 
 func CheckEvent(ctx context.Context, eventInfo *model.Event) error {
-	wholeEvent, _, err := mysql.QueryRecognizedEvent(ctx)
+	wholeEvent, err := QueryAllRecognizedReward(ctx)
 	if err != nil {
 		return err
 	}

@@ -48,7 +48,6 @@ type RecognizedEvent struct {
 	RecognitionBasis    string `gorm:"size:255;column:recognition_basis"`
 	RecognizedLevel     string `gorm:"size:50;not null;column:recognized_level"`
 	IsActive            bool   `gorm:"default:true;column:is_active"`
-	RuleId              int64  `gorm:"not null;column:rule_id"`
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
 	DeletedAt           gorm.DeletedAt `gorm:"index"`
