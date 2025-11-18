@@ -118,6 +118,40 @@ struct QueryRecognizeRewardResponse{
                 2: required model.RecognizeRewardList data,
 }
 
+// 上传积分权重的接口
+struct UploadRuleRequest{
+    1: required string event_level,
+    2: required string event_influence,
+    3: required double event_weight,
+    4: required i64 integral,
+    5: required string award_level,
+    6: required double award_level_weight,
+}
+
+struct UploadRuleResponse{
+    1: required model.BaseResp base,
+    2: required model.Rule data,
+}
+
+// 删除积分权重
+struct DeleteRuleRequest{
+    1: required string rule_id,
+}
+
+struct DeleteRuleResponse{
+    1: required model.BaseResp base,
+}
+
+// 查看积分权重规则
+struct QueryRuleRequest{
+    1: required i64 page_num,
+    2: required i64 page_size,
+}
+
+struct QueryRuleResponse{
+     1: required model.BaseResp base,
+     2: required model.Rule data,
+}
 service maintainService{
      QueryAllCollegeResponse QueryCollege(1: QueryAllCollegeRequest req) (api.get = "/api/admin/colleges"),
      QueryMajorByCollegeIdResponse QueryMajorByCollegeId(1: QueryMajorByCollegeIdRequest req) (api.get = "/api/admin/majors"),
@@ -128,5 +162,8 @@ service maintainService{
      UploadRecognizedRewardResponse UploadRecognizedReward(1:UploadRecognizedRewardRequest req)(api.post="/api/admin/reward/upload"),
      DeleteRecognizeRewardResponse DeleteRecognizeReward(1:DeleteRecognizeRewardRequest req)(api.delete = "/api/admin/reward/delete"),
      QueryRecognizeRewardResponse QueryRecognizeReward(1:QueryRecognizeRewardRequest req)(api.get= "/api/admin/reward/query"),
+     UploadRuleResponse UploadRule(1:UploadRuleRequest req)(api.post="/api/admin/rule/upload"),
+     DeleteRuleResponse DeleteRule(1:DeleteRuleRequest req)(api.delete = "/api/admin/rule/delete"),
+     QueryRuleResponse QueryRule(1:QueryRuleRequest req)(api.get = "/api/admin/rule/query"),
 }
 

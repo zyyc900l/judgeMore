@@ -86,6 +86,8 @@ struct RecognizeReward{
                 13: string updated_at,        // 更新时间
                 14: string deleted_at         // 删除时
 }
+
+
 struct RecognizeRewardList{
     1: list<RecognizeReward> item,
     2: i64 total,
@@ -111,3 +113,19 @@ struct CollegeList{
     1 : list <College> item,
     2: i64 total,
 }
+
+struct Rule{
+    1: string rule_id,
+    2: string recognized_event_id,
+    3: string event_level,
+    4: double event_weight,
+    5: i64 integral,
+    6: string rule_desc,
+    7: bool is_editable,
+    8: string award_level
+    9: i64 award_level_weight,
+    10: string created_at,        // 创建时间
+    11: string updated_at,        // 更新时间
+    12: string deleted_at         // 删除时
+}
+
