@@ -68,5 +68,6 @@ const (
 	InterFileProcessErrorCode                //文件处理错误
 	InternalDatabaseErrorCode
 	InternalRedisErrorCode // Redis错误
+	InternalESErrorCode    // Redis错误
 	InterConfigErrorCode
 )

@@ -42,3 +42,43 @@ type ScoreRecord struct {
 	UpdateAT      int64
 	DeleteAT      int64
 }
+type ViewRecognizedRewardReq struct {
+	EventName         *string
+	OrganizerName     *string
+	RecognizedEventId *string
+}
+
+func (p *ViewRecognizedRewardReq) IsSetEventName() bool {
+	return p.EventName != nil
+}
+
+func (p *ViewRecognizedRewardReq) IsSetOrganizerName() bool {
+	return p.OrganizerName != nil
+}
+
+func (p *ViewRecognizedRewardReq) IsSetRecognizedEventId() bool {
+	return p.RecognizedEventId != nil
+}
+
+var DEFAULT string
+
+func (p *ViewRecognizedRewardReq) GetEventName() string {
+	if !p.IsSetEventName() {
+		return DEFAULT
+	}
+	return *p.EventName
+}
+
+func (p *ViewRecognizedRewardReq) GetOrganizerName() string {
+	if !p.IsSetOrganizerName() {
+		return DEFAULT
+	}
+	return *p.OrganizerName
+}
+
+func (p *ViewRecognizedRewardReq) GetRecognizedEventId() string {
+	if !p.IsSetRecognizedEventId() {
+		return DEFAULT
+	}
+	return *p.RecognizedEventId
+}

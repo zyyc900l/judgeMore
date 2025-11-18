@@ -88,7 +88,6 @@ func QueryAllRecognizedReward(ctx context.Context) ([]*model.RecognizedEvent, er
 			filteredList = append(filteredList, v)
 		}
 	}
-
 	return filteredList, nil
 }
 

@@ -1,0 +1,43 @@
+mysql:
+  addr: 0.0.0.0:3306
+  database: judgeMore
+  username: judgeMore
+  password: judgeMore
+  charset: utf8mb4
+
+smtp:
+  host: "smtp.163.com"
+  port: 465
+  user: "m17850991643@163.com"
+  password: "DPe3RHC7Ez7eCbWB"
+  from: "m17850991643@163.com"
+  from_name: "judgeMore"
+
+openai:
+  api-key: "82c6cf26980d42cda3a3935b56203b7b.gRFLI6JFwx3LXWmh"
+  api-url: "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+  api-model: "glm-4v"
+
+oss:
+  bucket: "judgemore"
+  accessKey: "Lw_ZsBy6lL-oZe0YgImZ8PZtR-_hz0O78ctqgReO"
+  secretKey: "mJVfjhvhXYEnsRmJ5GG2QjcfiGFDA69V9PLk_w6Q"
+  domain: "http://t53acv9du.hn-bkt.clouddn.com/"
+  region: "z2"
+
+elasticsearch:
+  addr: 127.0.0.1:9200
+  host: 127.0.0.1
+
+redis:
+  addr: 127.0.0.1:6379
+  username: "default"
+  password: "judgeMore"
+
+services:
+  main:
+    name : main
+    load-balance: true
+    addr:
+      - 0.0.0.0:9999
+

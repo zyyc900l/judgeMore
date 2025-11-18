@@ -14,3 +14,7 @@ const (
 	RedisDBEvent     = 1
 	RedisDBStructure = 1
 )
+
+const (
+	IndexName = "re_info"
+)

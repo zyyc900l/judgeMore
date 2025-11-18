@@ -62,12 +62,10 @@ func configMapping(srv string) {
 	}
 	Mysql = &c.MySQL
 	Redis = &c.Redis
-	Kafka = &c.Kafka
-	Etcd = &c.Etcd
 	OpenAI = &c.OpenAI
 	Smtp = &c.Smtp
 	Oss = &c.Oss
-	Otel = &c.Otel
+	Elasticsearch = &c.Elasticsearch
 
 	Service = getService(srv)
 }
