@@ -190,16 +190,20 @@ func (svc *EventService) UpdateEventLevel(event_id string, level string, appeal_
 }
 
 func CheckEvent(ctx context.Context, eventInfo *model.Event) error {
-	wholeEvent, err := QueryAllRecognizedReward(ctx)
+	req := &model.ViewRecognizedRewardReq{
+		EventName:     &eventInfo.EventName,
+		OrganizerName: &eventInfo.EventOrganizer,
+	}
+	Event, err := SearchRecognizedEvent(ctx, req)
 	if err != nil {
 		return err
 	}
 	// 设置最低相似度阈值
-	const minSimilarity = 0.5
+	const minSimilarity = 0.4
 	var bestMatch *model.RecognizedEvent
 	var highestSimilarity float64
 	// 遍历所有事件，计算相似度
-	for _, v := range wholeEvent {
+	for _, v := range Event {
 		similarity := strsim.Compare(v.RecognizedEventName, eventInfo.EventName)
 		// 如果相似度高于阈值且是当前最高相似度
 		if similarity >= minSimilarity && similarity > highestSimilarity {

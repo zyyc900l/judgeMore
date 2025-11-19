@@ -25,7 +25,7 @@ services:
       - ../config/sql:/docker-entrypoint-initdb.d
       - ./data/mysql:/var/lib/mysql
 
-  elasticsearch:
+  judgeMore-elasticsearch:
     image: elasticsearch:8.4.2
     container_name: judgeMore-elasticsearch
     env_file:
@@ -49,7 +49,7 @@ services:
     restart: always
     networks:
       - judgeMore
-    mem_limit: 750m
+    mem_limit: 2g
 
 networks:
   judgeMore:

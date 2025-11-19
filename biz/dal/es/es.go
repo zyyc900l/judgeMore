@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bytedance/sonic"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/olivere/elastic/v7"
 	"judgeMore/biz/service/model"
 	"judgeMore/pkg/errno"
@@ -31,6 +32,7 @@ func IsIndexDataExist(ctx context.Context, indexName string) (bool, error) {
 	if err != nil {
 		return false, errno.Errorf(errno.InternalESErrorCode, "Elastic.IsIndexEmpty failed: %v", err)
 	}
+	hlog.Info(count)
 	return count != 0, nil
 }
 
@@ -45,7 +47,7 @@ func AddItem(ctx context.Context, indexName string, re *model.RecognizedEvent) e
 	return nil
 }
 
-// 当该删除的记录不存在时，err也回事nil
+// 当该删除的记录不存在时，err也回是nil
 func RemoveItem(ctx context.Context, indexName string, id string) error {
 	_, err := els.Delete().Index(indexName).Id(fmt.Sprintf("%s", id)).Do(ctx)
 	if err != nil {
@@ -57,7 +59,7 @@ func RemoveItem(ctx context.Context, indexName string, id string) error {
 func SearchItems(ctx context.Context, indexName string, req *model.ViewRecognizedRewardReq) ([]*model.RecognizedEvent, int64, error) {
 	q := BuildQuery(req)
 	result, err := els.Search().Index(indexName).
-		Query(q).Do(ctx)
+		Query(q).Size(200).Do(ctx)
 	if err != nil {
 		return nil, 0, errno.Errorf(errno.InternalESErrorCode, "CommodityElastic.SearchItems failed: %v", err)
 	}
@@ -74,32 +76,34 @@ func SearchItems(ctx context.Context, indexName string, req *model.ViewRecognize
 		}
 		rets = append(rets, &re)
 	}
+	hlog.Info(result.TotalHits())
 	return rets, result.TotalHits(), nil
 }
-
 func BuildQuery(req *model.ViewRecognizedRewardReq) *elastic.BoolQuery {
 	query := elastic.NewBoolQuery()
 	hasCondition := false
 
-	// 事件名称查询
+	// 事件名称查询 - 使用分词搜索
 	if req.EventName != nil && req.GetEventName() != "" {
-		query = query.Must(elastic.NewMatchQuery("recognized_event_name", req.GetEventName()))
+		hlog.Info("Searching event name:", req.GetEventName())
+		// 使用 MatchQuery 进行分词搜索
+		query = query.Must(elastic.NewMatchQuery("RecognizedEventName", req.GetEventName()))
 		hasCondition = true
 	}
 
-	// 组织者名称查询
+	// 组织者名称查询 - 使用分词搜索
 	if req.OrganizerName != nil && req.GetOrganizerName() != "" {
-		query = query.Must(elastic.NewMatchQuery("organizer", req.GetOrganizerName()))
+		hlog.Info("Searching organizer:", req.GetOrganizerName())
+		query = query.Must(elastic.NewMatchQuery("Organizer", req.GetOrganizerName()))
 		hasCondition = true
 	}
 
-	// 识别事件ID查询
+	// 识别事件ID查询 - 保持精确匹配（ID通常是精确的）
 	if req.RecognizedEventId != nil && req.GetRecognizedEventId() != "" {
-		query = query.Must(elastic.NewMatchQuery("id", req.GetRecognizedEventId()))
+		query = query.Must(elastic.NewTermQuery("RecognizedEventId", req.GetRecognizedEventId()))
 		hasCondition = true
 	}
 
-	// 如果没有设置任何条件，返回匹配所有文档的查询
 	if !hasCondition {
 		query = query.Must(elastic.NewMatchAllQuery())
 	}

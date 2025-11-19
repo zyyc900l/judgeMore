@@ -33,6 +33,7 @@ func CreateNewEvent(ctx context.Context, event *model.Event) (string, error) {
 		EventOrganizer: event.EventOrganizer,
 		EventLevel:     event.EventLevel,
 		MaterialUrl:    event.MaterialUrl,
+		AwardContent:   event.AwardContent,
 		MaterialStatus: "待审核",
 		AwardLevel:     event.AwardLevel, //提取的内容并没有这项
 		AwardAt:        event.AwardTime,

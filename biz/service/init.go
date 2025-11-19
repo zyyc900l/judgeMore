@@ -22,6 +22,7 @@ func Init() {
 	taskqueue.Init()
 	err := IsMappingExist(context.Background())
 	if err != nil {
+		fmt.Errorf(err.Error())
 		panic(err)
 	}
 }

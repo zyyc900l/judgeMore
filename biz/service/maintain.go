@@ -203,6 +203,7 @@ func (svc *MaintainService) NewRecognizedEvent(re *model.RecognizedEvent) (*mode
 		return nil, err
 	}
 	taskqueue.AddUpdateRecognizedTask(svc.ctx, constants.StructKey)
+	taskqueue.AddUpdateElasticTask(svc.ctx, constants.REKey)
 	return info, nil
 }
 
@@ -219,5 +220,6 @@ func (svc *MaintainService) DeleteRecognizedEvent(id string) error {
 		return err
 	}
 	taskqueue.AddUpdateRecognizedTask(svc.ctx, constants.StructKey)
+	taskqueue.AddUpdateElasticTask(svc.ctx, constants.REKey)
 	return nil
 }
