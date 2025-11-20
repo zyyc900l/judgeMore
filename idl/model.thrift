@@ -26,13 +26,14 @@ struct Event {
     6: string event_level,        // 国家级 / 省级 / 校级 / 商业赛事
     7: string event_influence,    // 高 / 中 / 低
     8: string award_level,        // 一等奖 / 二等奖 / 三等奖 / 优秀奖等
-    9: string material_url,       // 材料上传路径
-    10: string material_status,    // 待审核 / 已审核 / 驳回
-    11: bool auto_extracted,      // true - 是 / false - 否
-    12: string award_time
-    13: string created_at,        // 创建时间
-    14: string updated_at,        // 更新时间
-    15: string deleted_at         // 删除时
+    9: string award_content,
+    10: string material_url,       // 材料上传路径
+    11: string material_status,    // 待审核 / 已审核 / 驳回
+    12: bool auto_extracted,      // true - 是 / false - 否
+    13: string award_time
+    14: string created_at,        // 创建时间
+    15: string updated_at,        // 更新时间
+    16: string deleted_at         // 删除时
 }
 struct EventList{
      1: required list<Event> items,

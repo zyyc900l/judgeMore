@@ -59,7 +59,7 @@ func RemoveItem(ctx context.Context, indexName string, id string) error {
 func SearchItems(ctx context.Context, indexName string, req *model.ViewRecognizedRewardReq) ([]*model.RecognizedEvent, int64, error) {
 	q := BuildQuery(req)
 	result, err := els.Search().Index(indexName).
-		Query(q).Size(200).Do(ctx)
+		Query(q).Size(20).Do(ctx)
 	if err != nil {
 		return nil, 0, errno.Errorf(errno.InternalESErrorCode, "CommodityElastic.SearchItems failed: %v", err)
 	}
