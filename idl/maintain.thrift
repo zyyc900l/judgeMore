@@ -126,7 +126,7 @@ struct UploadRuleRequest{
     4: required i64 integral, // 对应基础积分
     5: required string rule_desc, // 规则说明
     6: required string award_level, // 特等奖/一等奖/二等奖/三等奖/优秀奖
-    7: required double award_level_weight, // 奖项权重系数
+    7: required double award_level_weight  // 奖项权重系数
 }
 
 struct UploadRuleResponse{
