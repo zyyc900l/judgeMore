@@ -67,6 +67,7 @@ CREATE TABLE `event_rules`  (
                                 `integral` int NOT NULL COMMENT '对应基础积分',
                                 `rule_desc` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '规则说明',
                                 `is_editable` tinyint NOT NULL COMMENT '1 - 是 / 0 - 否',
+                                `is_active` tinyint(1) NULL DEFAULT 1 COMMENT  '是否启用 1 - 是 / 0 - 否',
                                 `award_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '特等奖/一等奖/二等奖/三等奖/优秀奖',
                                 `award_level_weight` decimal(5, 2) NULL DEFAULT NULL COMMENT '奖项权重系数',
                                 `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -149,9 +150,7 @@ CREATE TABLE `integral_results`  (
                                      INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
                                      INDEX `idx_event_id`(`event_id` ASC) USING BTREE,
                                      INDEX `idx_appeal_id`(`appeal_id` ASC) USING BTREE,
-                                     INDEX `idx_status`(`status` ASC) USING BTREE,
-                                     CONSTRAINT `integral_results_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `student_events` (`event_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-                                     CONSTRAINT `integral_results_ibfk_4` FOREIGN KEY (`rule_id`) REFERENCES `event_rules` (`rule_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+                                     INDEX `idx_status`(`status` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 10500 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '积分计算结果表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------

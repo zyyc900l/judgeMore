@@ -149,23 +149,24 @@ func UpdateEventMessage(ctx context.Context, event *model.Event) error {
 			return errno.NewErrNo(errno.InternalDatabaseErrorCode, "UpdateEventMessage Error:"+err.Error())
 		}
 		return nil
+	} else {
+		req := &Event{
+			MaterialUrl:  event.MaterialUrl,
+			RecognizedId: event.RecognizeId,
+		}
+		err := db.WithContext(ctx).Table(constants.TableEvent).Transaction(func(tx *gorm.DB) error {
+			return tx.Model(&Event{}).
+				Where(" event_id = ?", event.EventId). // 或者其他唯一标识字段
+				Updates(map[string]interface{}{
+					"material_url":  req.MaterialUrl,
+					"recognized_id": req.RecognizedId,
+				}).Error
+		})
+		if err != nil {
+			return errno.NewErrNo(errno.InternalDatabaseErrorCode, "UpdateEventMessage Error:"+err.Error())
+		}
+		return nil
 	}
-	req := &Event{
-		MaterialUrl:  event.MaterialUrl,
-		RecognizedId: event.RecognizeId,
-	}
-	err := db.WithContext(ctx).Table(constants.TableEvent).Transaction(func(tx *gorm.DB) error {
-		return tx.Model(&Event{}).
-			Where(" event_id = ?", event.EventId). // 或者其他唯一标识字段
-			Updates(map[string]interface{}{
-				"material_url":  req.MaterialUrl,
-				"recognized_id": req.RecognizedId,
-			}).Error
-	})
-	if err != nil {
-		return errno.NewErrNo(errno.InternalDatabaseErrorCode, "UpdateEventMessage Error:"+err.Error())
-	}
-	return nil
 }
 func buildEvent(data *Event) *model.Event {
 	return &model.Event{

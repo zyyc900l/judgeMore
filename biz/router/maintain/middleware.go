@@ -91,3 +91,28 @@ func _queryrecognizerewardMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _ruleMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _deleteruleMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _queryruleMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _uploadruleMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _updateruleMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

@@ -49,7 +49,6 @@ func AccessTokenJwt() {
 
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c) // 是从 JWT 令牌中提取 claims 的函数
-			log.Printf("claims: %+v", claims)
 
 			// 检查 claims[identityKey] 是否存在
 			userID, exists := claims[identityKey]
@@ -134,7 +133,6 @@ func RefreshTokenJwt() {
 		//从令牌中提取信息
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
 			claims := jwt.ExtractClaims(ctx, c) // 是从 JWT 令牌中提取 claims 的函数
-			log.Printf("claims: %+v", claims)
 
 			// 检查 claims[identityKey] 是否存在
 			userID, exists := claims[identityKey]

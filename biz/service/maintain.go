@@ -223,3 +223,104 @@ func (svc *MaintainService) DeleteRecognizedEvent(id string) error {
 	taskqueue.AddUpdateElasticTask(svc.ctx, constants.REKey)
 	return nil
 }
+
+func (svc *MaintainService) QueryRule(page_num, page_size int64) ([]*model.ScoreRule, int64, error) {
+	if page_num <= 0 || page_size <= 0 {
+		return nil, -1, errno.NewErrNo(errno.ParamVerifyErrorCode, "page param no invalid")
+	}
+	data, err := QueryAllRule(svc.ctx)
+	if err != nil {
+		return nil, -1, err
+	}
+	count := int64(len(data))
+	startIndex := (page_num - 1) * page_size
+	endIndex := startIndex + page_size
+	if startIndex > count {
+		return nil, 0, nil
+	}
+	if endIndex > count {
+		endIndex = count
+	}
+	return data[startIndex:endIndex], count, nil
+}
+func (svc *MaintainService) NewRule(re *model.ScoreRule) (*model.ScoreRule, error) {
+	// 应该对新增信息进行一次比较检验
+	// 看看是否允许新增信息
+	data, err := QueryAllRule(svc.ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !checkRule(re.EventLevel, re.AwardLevel) {
+		return nil, errno.NewErrNo(errno.ParamVerifyErrorCode, "eventLevel or awardLevel invaild")
+	}
+	for _, d := range data {
+		if re.RecognizedEventId == d.RecognizedEventId && re.EventLevel == d.EventLevel && re.AwardLevel == d.AwardLevel {
+			return nil, errno.NewErrNo(errno.ServiceRuleExistCode, "rule have exist ! try to use update")
+		}
+	}
+	re.IsActive = 1
+	// 到这里就允许新增了
+	if re.RecognizedEventId != "0" {
+		exist, err := IsRecognizedEventExist(svc.ctx, re.RecognizedEventId)
+		if err != nil {
+			return nil, err
+		}
+		if !exist {
+			return nil, errno.NewErrNo(errno.ServiceRecognizedNotExistCode, "RecognizedEvent Not exist")
+		}
+	}
+	rule, err := mysql.AddScoreRule(svc.ctx, re)
+	if err != nil {
+		return nil, err
+	}
+	taskqueue.AddUpdateRuleTask(svc.ctx, constants.StructKey)
+	return rule, nil
+}
+func (svc *MaintainService) DeleteRule(id string) error {
+	// 由于删除基础的规则会导致积分计算崩溃且提供update接口 这里拒绝对基本规则的删除
+	exist, err := IsRuleExist(svc.ctx, id)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		return errno.NewErrNo(errno.ServiceRuleNotExistCode, "Rule not exist")
+	}
+	data, err := QueryAllRule(svc.ctx)
+	for _, d := range data {
+		if d.RuleId == id && d.RecognizedEventId == "0" {
+			return errno.NewErrNo(errno.ServiceRuleUnDeleteCode, "Not allow to delete the rule try updates")
+		}
+	}
+	err = mysql.DeleteRule(svc.ctx, id)
+	if err != nil {
+		return err
+	}
+	taskqueue.AddUpdateRuleTask(svc.ctx, constants.StructKey)
+	return nil
+}
+func (svc *MaintainService) UpdateRule(ctx context.Context, rule *model.ScoreRule) (*model.ScoreRule, error) {
+	exist, err := IsRuleExist(svc.ctx, rule.RuleId)
+	if err != nil {
+		return nil, err
+	}
+	if !exist {
+		return nil, errno.NewErrNo(errno.ServiceRuleNotExistCode, "rule not exist")
+	}
+	r, err := mysql.UpdateRule(ctx, rule)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+// 硬编码 如果有兴趣可以进行优化
+func checkRule(eventLevel, awardLevel string) bool {
+
+	if eventLevel != "国际级" && eventLevel != "国家级" && eventLevel != "省级" {
+		return false
+	}
+	if awardLevel != "特等奖" && awardLevel != "一等奖" && awardLevel != "二等奖" && awardLevel != "三等奖" && awardLevel != "优秀奖" {
+		return false
+	}
+	return true
+}

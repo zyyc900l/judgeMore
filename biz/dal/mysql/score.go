@@ -128,44 +128,6 @@ func CreateNewScoreRecord(ctx context.Context, record *model.ScoreRecord) error 
 	return nil
 }
 
-func GetScoreRule(ctx context.Context) ([]*model.ScoreRule, int64, error) {
-	var total int64
-	var rules []*EventRule
-	err := db.WithContext(ctx).
-		Table(constants.TableRule).
-		Find(&rules).
-		Count(&total).
-		Error
-	if err != nil {
-		return nil, -1, errno.NewErrNo(errno.InternalDatabaseErrorCode, "mysql:query scoreRule failed:"+err.Error())
-	}
-	return buildRuleList(rules), total, nil
-}
-
-func buildRule(rule *EventRule) *model.ScoreRule {
-	return &model.ScoreRule{
-		RuleId:            rule.RuleId,
-		RecognizedEventId: rule.RecognizedEventId,
-		EventLevel:        rule.EventLevel,
-		EventWeight:       rule.EventWeight,
-		Integral:          rule.Integral,
-		RuleDesc:          rule.RuleDesc,
-		IsEditable:        rule.IsEditable,
-		AwardLevel:        rule.AwardLevel,
-		AwardLevelWeight:  rule.AwardLevelWeight,
-		UpdateAT:          rule.UpdatedAt.Unix(),
-		CreateAT:          rule.CreatedAt.Unix(),
-		DeleteAT:          0,
-	}
-}
-func buildRuleList(rules []*EventRule) []*model.ScoreRule {
-	list := make([]*model.ScoreRule, 0)
-	for _, rule := range rules {
-		list = append(list, buildRule(rule))
-	}
-	return list
-}
-
 func buildScore(r *ScoreResult) *model.ScoreRecord {
 	return &model.ScoreRecord{
 		RuleId:        r.RuleId,

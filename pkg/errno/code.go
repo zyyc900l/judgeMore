@@ -61,6 +61,9 @@ const (
 	ServiceMajorNotExistCode
 	ServiceGradeNotExistCode
 	ServiceRecognizedNotExistCode // 赛事认定表中不存在该赛事
+	ServiceRuleExistCode          // 该条规则已经存在
+	ServiceRuleNotExistCode       // 该条规则不存在
+	ServiceRuleUnDeleteCode       // 尝试删除基本积分计算规则 该条规则的删除会影响积分计算
 )
 
 // 服务错误

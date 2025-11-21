@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/bytedance/sonic"
-	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/olivere/elastic/v7"
 	"judgeMore/biz/service/model"
 	"judgeMore/pkg/errno"
@@ -32,7 +31,6 @@ func IsIndexDataExist(ctx context.Context, indexName string) (bool, error) {
 	if err != nil {
 		return false, errno.Errorf(errno.InternalESErrorCode, "Elastic.IsIndexEmpty failed: %v", err)
 	}
-	hlog.Info(count)
 	return count != 0, nil
 }
 
@@ -76,7 +74,6 @@ func SearchItems(ctx context.Context, indexName string, req *model.ViewRecognize
 		}
 		rets = append(rets, &re)
 	}
-	hlog.Info(result.TotalHits())
 	return rets, result.TotalHits(), nil
 }
 func BuildQuery(req *model.ViewRecognizedRewardReq) *elastic.BoolQuery {
@@ -85,7 +82,6 @@ func BuildQuery(req *model.ViewRecognizedRewardReq) *elastic.BoolQuery {
 
 	// 事件名称查询 - 使用分词搜索
 	if req.EventName != nil && req.GetEventName() != "" {
-		hlog.Info("Searching event name:", req.GetEventName())
 		// 使用 MatchQuery 进行分词搜索
 		query = query.Must(elastic.NewMatchQuery("RecognizedEventName", req.GetEventName()))
 		hasCondition = true
@@ -93,7 +89,6 @@ func BuildQuery(req *model.ViewRecognizedRewardReq) *elastic.BoolQuery {
 
 	// 组织者名称查询 - 使用分词搜索
 	if req.OrganizerName != nil && req.GetOrganizerName() != "" {
-		hlog.Info("Searching organizer:", req.GetOrganizerName())
 		query = query.Must(elastic.NewMatchQuery("Organizer", req.GetOrganizerName()))
 		hasCondition = true
 	}

@@ -58,6 +58,38 @@ func QueryAllCollege(ctx context.Context) ([]*model.College, error) {
 	return collegeList, nil
 }
 
+func QueryAllRule(ctx context.Context) ([]*model.ScoreRule, error) {
+	exist, err := cache.IsRuleExist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var ruleList []*model.ScoreRule
+	if !exist {
+		// db 载入 redis
+		ruleList, _, err = mysql.GetScoreRule(ctx)
+		if err != nil {
+			return nil, err
+		}
+		err = cache.RuleToCache(ctx, ruleList)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		ruleList, err = cache.QueryAllRule(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	// 筛去isactive == false的
+	filteredList := make([]*model.ScoreRule, 0, len(ruleList))
+	for _, v := range ruleList {
+		if v.IsActive == 1 {
+			filteredList = append(filteredList, v)
+		}
+	}
+	return filteredList, nil
+}
+
 // 同样提供一个获取权责关系的函数 用于其他业务
 func QueryAllRelation(ctx context.Context, user_id string) ([]*model.Relation, error) {
 	exist, err := cache.IsRelationExist(ctx)
@@ -113,6 +145,18 @@ func IsCollegeExist(ctx context.Context, college string) (bool, error) {
 	}
 	for _, m := range collegelist {
 		if m.CollegeName == college {
+			return true, nil
+		}
+	}
+	return false, err
+}
+func IsRuleExist(ctx context.Context, id string) (bool, error) {
+	re, err := QueryAllRule(ctx)
+	if err != nil {
+		return false, nil
+	}
+	for _, m := range re {
+		if m.RuleId == id {
 			return true, nil
 		}
 	}

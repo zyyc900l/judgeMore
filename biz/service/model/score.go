@@ -8,6 +8,7 @@ type ScoreRule struct {
 	Integral          int64   `json:"integral"`
 	RuleDesc          string  `json:"rule_desc"`
 	IsEditable        bool    `json:"is_editable"`
+	IsActive          int
 	AwardLevel        string  `json:"award_level"`
 	AwardLevelWeight  float64 `json:"award_level_weight"`
 	CreateAT          int64

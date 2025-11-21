@@ -95,23 +95,29 @@ func calculateScore(ctx context.Context, event_id string) error {
 		return errno.NewErrNo(errno.InternalRedisErrorCode,
 			fmt.Sprintf("calculateScore: %v", err))
 	}
-	var ruleList []*model.ScoreRule
+	var rList []*model.ScoreRule
 	if !exist {
 		// db 载入 redis
-		ruleList, _, err = mysql.GetScoreRule(ctx)
+		rList, _, err = mysql.GetScoreRule(ctx)
 		if err != nil {
 			logger.Errorf("calculateScore:failed to query rule info :%v", err)
 			return errno.NewErrNo(errno.InternalDatabaseErrorCode,
 				fmt.Sprintf("calculateScore: failed to query rule info :%v", err))
 		}
-		err = cache.RuleToCache(ctx, ruleList)
+		err = cache.RuleToCache(ctx, rList)
 		if err != nil {
 			logger.Errorf("calculateScore:failed to update rule cache :%v", err)
 			return errno.NewErrNo(errno.InternalRedisErrorCode,
 				fmt.Sprintf("calculateScore: failed update rule cache :%v", err))
 		}
 	} else {
-		ruleList, err = cache.QueryAllRule(ctx)
+		rList, err = cache.QueryAllRule(ctx)
+	}
+	ruleList := make([]*model.ScoreRule, 0, len(rList))
+	for _, v := range rList {
+		if v.IsActive == 1 {
+			ruleList = append(ruleList, v)
+		}
 	}
 	var score float64
 	score = -1
@@ -172,27 +178,33 @@ func syncChangedScore(ctx context.Context, event_id string) error {
 	}
 	// cache处获取rule
 	exist, err := cache.IsRuleExist(ctx)
-	var ruleList []*model.ScoreRule
 	if err != nil {
 		return errno.NewErrNo(errno.InternalRedisErrorCode,
 			fmt.Sprintf("calculateScore: %v", err))
 	}
+	var rList []*model.ScoreRule
 	if !exist {
 		// db 载入 redis
-		ruleList, _, err = mysql.GetScoreRule(ctx)
+		rList, _, err = mysql.GetScoreRule(ctx)
 		if err != nil {
 			logger.Errorf("calculateScore:failed to query rule info :%v", err)
 			return errno.NewErrNo(errno.InternalDatabaseErrorCode,
 				fmt.Sprintf("calculateScore: failed to query rule info :%v", err))
 		}
-		err = cache.RuleToCache(ctx, ruleList)
+		err = cache.RuleToCache(ctx, rList)
 		if err != nil {
 			logger.Errorf("calculateScore:failed to update rule cache :%v", err)
 			return errno.NewErrNo(errno.InternalRedisErrorCode,
 				fmt.Sprintf("calculateScore: failed update rule cache :%v", err))
 		}
 	} else {
-		ruleList, err = cache.QueryAllRule(ctx)
+		rList, err = cache.QueryAllRule(ctx)
+	}
+	ruleList := make([]*model.ScoreRule, 0, len(rList))
+	for _, v := range rList {
+		if v.IsActive == 1 {
+			ruleList = append(ruleList, v)
+		}
 	}
 	var score float64
 	score = -1

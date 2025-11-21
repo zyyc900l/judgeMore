@@ -34,6 +34,13 @@ func Register(r *server.Hertz) {
 				_reward.GET("/query", append(_queryrecognizerewardMw(), maintain.QueryRecognizeReward)...)
 				_reward.POST("/upload", append(_uploadrecognizedrewardMw(), maintain.UploadRecognizedReward)...)
 			}
+			{
+				_rule := _admin.Group("/rule", _ruleMw()...)
+				_rule.DELETE("/delete", append(_deleteruleMw(), maintain.DeleteRule)...)
+				_rule.GET("/query", append(_queryruleMw(), maintain.QueryRule)...)
+				_rule.PUT("/update", append(_updateruleMw(), maintain.UpdateRule)...)
+				_rule.POST("/upload", append(_uploadruleMw(), maintain.UploadRule)...)
+			}
 		}
 	}
 }

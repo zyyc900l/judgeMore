@@ -8,6 +8,7 @@ import (
 	"judgeMore/biz/service"
 	"judgeMore/biz/service/model"
 	"judgeMore/pkg/errno"
+	"strconv"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	maintain "judgeMore/biz/model/maintain"
@@ -233,6 +234,110 @@ func QueryRecognizeReward(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	resp.Data = pack.RecognizedEventList(info, count)
+	resp.Base = pack.BuildBaseResp(errno.Success)
+	pack.SendResponse(c, resp)
+}
+
+// UploadRule .
+// @router /api/admin/rule/upload [POST]
+func UploadRule(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req maintain.UploadRuleRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.SendFailResponse(c, errno.NewErrNo(errno.ParamMissingErrorCode, "param missing:"+err.Error()))
+		return
+	}
+
+	resp := new(maintain.UploadRuleResponse)
+	var rid string
+	if req.RecognizedEventID == nil {
+		rid = "0"
+	} else {
+		rid = strconv.FormatInt(*req.RecognizedEventID, 10)
+	}
+	info, err := service.NewMaintainService(ctx, c).NewRule(&model.ScoreRule{
+		RecognizedEventId: rid,
+		EventWeight:       req.EventWeight,
+		EventLevel:        req.EventLevel,
+		Integral:          req.Integral,
+		AwardLevel:        req.AwardLevel,
+	})
+	if err != nil {
+		pack.SendFailResponse(c, errno.ConvertErr(err))
+		return
+	}
+	resp.Data = pack.Rule(info)
+	resp.Base = pack.BuildBaseResp(errno.Success)
+	pack.SendResponse(c, resp)
+}
+
+// DeleteRule .
+// @router /api/admin/rule/delete [DELETE]
+func DeleteRule(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req maintain.DeleteRuleRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.SendFailResponse(c, errno.NewErrNo(errno.ParamMissingErrorCode, "param missing:"+err.Error()))
+		return
+	}
+
+	resp := new(maintain.DeleteRuleResponse)
+	err = service.NewMaintainService(ctx, c).DeleteRule(req.RuleID)
+	if err != nil {
+		pack.SendFailResponse(c, errno.ConvertErr(err))
+		return
+	}
+	resp.Base = pack.BuildBaseResp(errno.Success)
+	pack.SendResponse(c, resp)
+}
+
+// QueryRule .
+// @router /api/admin/rule/query [GET]
+func QueryRule(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req maintain.QueryRuleRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.SendFailResponse(c, errno.NewErrNo(errno.ParamMissingErrorCode, "param missing:"+err.Error()))
+		return
+	}
+
+	resp := new(maintain.QueryRuleResponse)
+	info, count, err := service.NewMaintainService(ctx, c).QueryRule(req.PageNum, req.PageSize)
+	if err != nil {
+		pack.SendFailResponse(c, errno.ConvertErr(err))
+		return
+	}
+	resp.Data = pack.RuleList(info, count)
+	resp.Base = pack.BuildBaseResp(errno.Success)
+	pack.SendResponse(c, resp)
+}
+
+// UpdateRule .
+// @router /api/admin/rule/update [PUT]
+func UpdateRule(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req maintain.UpdateRuleRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.SendFailResponse(c, errno.NewErrNo(errno.ParamMissingErrorCode, "param missing:"+err.Error()))
+		return
+	}
+
+	resp := new(maintain.UpdateRuleResponse)
+	updateReq := &model.ScoreRule{RuleId: req.RuleID,
+		RuleDesc:    req.GetRuleDesc(),
+		Integral:    req.GetIntegral(),
+		EventWeight: req.GetEventWeight(),
+	}
+	info, err := service.NewMaintainService(ctx, c).UpdateRule(ctx, updateReq)
+	if err != nil {
+		pack.SendFailResponse(c, errno.ConvertErr(err))
+		return
+	}
+	resp.Data = pack.Rule(info)
 	resp.Base = pack.BuildBaseResp(errno.Success)
 	pack.SendResponse(c, resp)
 }

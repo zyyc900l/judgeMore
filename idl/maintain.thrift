@@ -117,9 +117,51 @@ struct QueryRecognizeRewardResponse{
                 1: required model.BaseResp base,
                 2: required model.RecognizeRewardList data,
 }
-// 查看积分计算规则
-// 新增积分计算规则
-// 删除积分计算规则
+// 上传积分权重的接口
+struct UploadRuleRequest{
+    1: optional i64 recognized_event_id,
+    2: required string event_level, // 国际级|国家级|省级|校级
+    3: required double  event_weight, // 赛事权重系数
+    4: required i64 integral, // 对应基础积分
+    5: required string rule_desc, // 规则说明
+    6: required string award_level, // 特等奖/一等奖/二等奖/三等奖/优秀奖
+}
+
+struct UploadRuleResponse{
+    1: required model.BaseResp base,
+    2: required model.Rule data,
+}
+
+// 删除积分权重
+struct DeleteRuleRequest{
+    1: required string rule_id,
+}
+
+struct DeleteRuleResponse{
+    1: required model.BaseResp base,
+}
+
+// 查看积分权重规则
+struct QueryRuleRequest{
+    1: required i64 page_num,
+    2: required i64 page_size,
+}
+
+struct QueryRuleResponse{
+     1: required model.BaseResp base,
+     2: required model.RuleList data,
+}
+struct UpdateRuleRequest{
+        1: required string rule_id,
+        3: optional double  event_weight, // 赛事权重系数
+        4: optional i64 integral, // 对应基础积分
+        5: optional string rule_desc, // 规则说明
+
+}
+struct UpdateRuleResponse{
+        1: required model.BaseResp base,
+        2: required model.Rule data,
+}
 service maintainService{
      QueryAllCollegeResponse QueryCollege(1: QueryAllCollegeRequest req) (api.get = "/api/admin/colleges"),
      QueryMajorByCollegeIdResponse QueryMajorByCollegeId(1: QueryMajorByCollegeIdRequest req) (api.get = "/api/admin/majors"),
@@ -130,5 +172,9 @@ service maintainService{
      UploadRecognizedRewardResponse UploadRecognizedReward(1:UploadRecognizedRewardRequest req)(api.post="/api/admin/reward/upload"),
      DeleteRecognizeRewardResponse DeleteRecognizeReward(1:DeleteRecognizeRewardRequest req)(api.delete = "/api/admin/reward/delete"),
      QueryRecognizeRewardResponse QueryRecognizeReward(1:QueryRecognizeRewardRequest req)(api.get= "/api/admin/reward/query"),
+     UploadRuleResponse UploadRule(1:UploadRuleRequest req)(api.post="/api/admin/rule/upload"),
+     DeleteRuleResponse DeleteRule(1:DeleteRuleRequest req)(api.delete = "/api/admin/rule/delete"),
+     QueryRuleResponse QueryRule(1:QueryRuleRequest req)(api.get = "/api/admin/rule/query"),
+     UpdateRuleResponse UpdateRule(1:UpdateRuleRequest req)(api.put="/api/admin/rule/update"),
 }
 

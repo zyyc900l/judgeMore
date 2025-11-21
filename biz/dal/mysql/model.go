@@ -61,6 +61,7 @@ type EventRule struct {
 	Integral          int64          `gorm:"not null;column:integral"`
 	RuleDesc          string         `gorm:"size:500;column:rule_desc"`
 	IsEditable        bool           `gorm:"not null;column:is_editable"`
+	IsActive          int            `gorm:"default:1;column:is_active"`
 	AwardLevel        string         `gorm:"size:20;column:award_level"`
 	AwardLevelWeight  float64        `gorm:"type:decimal(5,2);column:award_level_weight"`
 	CreatedAt         time.Time      `gorm:"column:created_at"`
