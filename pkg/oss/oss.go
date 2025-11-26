@@ -137,6 +137,6 @@ func getQiniuZone(region string) *storage.Zone {
 	case "as0":
 		return &storage.Zone_as0
 	default:
-		return &storage.Zone_z0 // 默认华东
+		return &storage.Zone_z0
 	}
 }
