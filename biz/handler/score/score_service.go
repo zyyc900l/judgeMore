@@ -9,8 +9,9 @@ import (
 	"judgeMore/biz/service/model"
 	"judgeMore/pkg/errno"
 
-	"github.com/cloudwego/hertz/pkg/app"
 	score "judgeMore/biz/model/score"
+
+	"github.com/cloudwego/hertz/pkg/app"
 )
 
 // QueryScoreByScoreId .
@@ -120,6 +121,7 @@ func ScoreRank(ctx context.Context, c *app.RequestContext) {
 		pack.SendFailResponse(c, errno.ConvertErr(err))
 		return
 	}
+
 	resp.Data = pack.StuScoreMessageList(info, count)
 	resp.Base = pack.BuildBaseResp(errno.Success)
 	pack.SendResponse(c, resp)
