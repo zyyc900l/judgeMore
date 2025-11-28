@@ -27,8 +27,9 @@ struct QueryEventResponse{
       2: required model.Event data,
 }
 struct QueryEventByStuIdRequest{
-    1: required string page_num,
-    2: required string page_size,
+    1: required i64 page_num,
+    2: required i64 page_size,
+    3: required string Id,
 }
 struct QueryEventByStuIdResponse{
      1: required model.BaseResp base,

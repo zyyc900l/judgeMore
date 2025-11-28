@@ -44,8 +44,7 @@ func (svc *EventService) QueryEventByEventId(event_id string) (*model.Event, err
 	return eventInfo, nil
 }
 
-func (svc *EventService) QueryEventByStuId() ([]*model.Event, int64, error) {
-	stu_id := GetUserIDFromContext(svc.c)
+func (svc *EventService) QueryEventByStuId(page_size, page_num int64, stu_id string) ([]*model.Event, int64, error) {
 	exist, err := mysql.IsUserExist(svc.ctx, &model.User{Uid: stu_id})
 	if err != nil {
 		return nil, -1, err
@@ -57,7 +56,16 @@ func (svc *EventService) QueryEventByStuId() ([]*model.Event, int64, error) {
 	if err != nil {
 		return nil, count, err
 	}
-	return eventInfoList, count, nil
+	startIndex := (page_num - 1) * page_size
+	endIndex := startIndex + page_size
+	if startIndex > count {
+		return nil, 0, nil
+	}
+	if endIndex > count {
+		endIndex = count
+	}
+	return eventInfoList[startIndex:endIndex], count, nil
+
 }
 func (svc *EventService) UpdateEventStatus(event_id string, status int64) (*model.Event, error) {
 	// 常规检验

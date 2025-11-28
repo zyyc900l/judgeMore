@@ -11,4 +11,5 @@ const (
 	TableAppeal         = "appeals"
 	TableRelation       = "relation"
 	TableAdminRelation  = "admin_object"
+	TableFeedback       = "feedbacks"
 )

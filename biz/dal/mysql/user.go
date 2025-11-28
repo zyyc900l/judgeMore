@@ -129,6 +129,26 @@ func QueryUserByCollege(ctx context.Context, college string) ([]*model.User, err
 	}
 	return buildUserList(user), nil
 }
+func QueryUserByRole(ctx context.Context, role string) ([]*model.User, error) {
+	var user []*User
+	err := db.WithContext(ctx).
+		Table(constants.TableUser).Where("user_role = ?", role).
+		Find(&user).Error
+	if err != nil {
+		return nil, errno.NewErrNo(errno.InternalDatabaseErrorCode, "query userinfo by userrole error: "+err.Error())
+	}
+	return buildUserList(user), nil
+}
+func QueryUserByMajor(ctx context.Context, major string) ([]*model.User, error) {
+	var user []*User
+	err := db.WithContext(ctx).
+		Table(constants.TableUser).Where("major = ?", major).
+		Find(&user).Error
+	if err != nil {
+		return nil, errno.NewErrNo(errno.InternalDatabaseErrorCode, "query userinfo by major error: "+err.Error())
+	}
+	return buildUserList(user), nil
+}
 func QueryUserByUserGrade(ctx context.Context, grade string) ([]*model.User, error) {
 	var user []*User
 	err := db.WithContext(ctx).

@@ -41,6 +41,10 @@ func Register(r *server.Hertz) {
 				_rule.PUT("/update", append(_updateruleMw(), maintain.UpdateRule)...)
 				_rule.POST("/upload", append(_uploadruleMw(), maintain.UploadRule)...)
 			}
+			{
+				_user := _admin.Group("/user", _userMw()...)
+				_user.GET("/info", append(_queryuserMw(), maintain.QueryUser)...)
+			}
 		}
 	}
 }

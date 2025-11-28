@@ -134,3 +134,15 @@ type AdminRelation struct {
 	UpdatedAt time.Time      `gorm:"column:updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index;column:deleted_at"`
 }
+
+type Feedback struct {
+	FeedbackID   int64      `gorm:"column:feedback_id;primaryKey;autoIncrement" json:"feedback_id" comment:"主键"`
+	UserID       string     `gorm:"column:user_id;not null" json:"user_id" comment:"提交用户ID"`
+	Type         string     `gorm:"column:type;type:varchar(50);not null" json:"type" comment:"反馈类型"`
+	Content      string     `gorm:"column:content;type:text;not null" json:"content" comment:"反馈内容"`
+	IsReplied    bool       `gorm:"column:is_replied;not null;default:false" json:"is_replied" comment:"是否已回复"`
+	ReplyContent string     `gorm:"column:reply_content;type:text" json:"reply_content" comment:"回复内容"`
+	CreatedAt    time.Time  `gorm:"column:created_at;not null;autoCreateTime" json:"created_at" comment:"创建时间"`
+	UpdatedAt    time.Time  `gorm:"column:updated_at;not null;autoUpdateTime" json:"updated_at" comment:"更新时间"`
+	DeletedAt    *time.Time `gorm:"column:deleted_at;index" json:"deleted_at" comment:"删除时间"`
+}

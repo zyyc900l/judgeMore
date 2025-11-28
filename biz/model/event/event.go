@@ -1185,8 +1185,9 @@ func (p *QueryEventResponse) String() string {
 }
 
 type QueryEventByStuIdRequest struct {
-	PageNum  string `thrift:"page_num,1,required" form:"page_num,required" json:"page_num,required" query:"page_num,required"`
-	PageSize string `thrift:"page_size,2,required" form:"page_size,required" json:"page_size,required" query:"page_size,required"`
+	PageNum  int64  `thrift:"page_num,1,required" form:"page_num,required" json:"page_num,required" query:"page_num,required"`
+	PageSize int64  `thrift:"page_size,2,required" form:"page_size,required" json:"page_size,required" query:"page_size,required"`
+	Id       string `thrift:"Id,3,required" form:"Id,required" json:"Id,required" query:"Id,required"`
 }
 
 func NewQueryEventByStuIdRequest() *QueryEventByStuIdRequest {
@@ -1196,17 +1197,22 @@ func NewQueryEventByStuIdRequest() *QueryEventByStuIdRequest {
 func (p *QueryEventByStuIdRequest) InitDefault() {
 }
 
-func (p *QueryEventByStuIdRequest) GetPageNum() (v string) {
+func (p *QueryEventByStuIdRequest) GetPageNum() (v int64) {
 	return p.PageNum
 }
 
-func (p *QueryEventByStuIdRequest) GetPageSize() (v string) {
+func (p *QueryEventByStuIdRequest) GetPageSize() (v int64) {
 	return p.PageSize
+}
+
+func (p *QueryEventByStuIdRequest) GetId() (v string) {
+	return p.Id
 }
 
 var fieldIDToName_QueryEventByStuIdRequest = map[int16]string{
 	1: "page_num",
 	2: "page_size",
+	3: "Id",
 }
 
 func (p *QueryEventByStuIdRequest) Read(iprot thrift.TProtocol) (err error) {
@@ -1215,6 +1221,7 @@ func (p *QueryEventByStuIdRequest) Read(iprot thrift.TProtocol) (err error) {
 	var fieldId int16
 	var issetPageNum bool = false
 	var issetPageSize bool = false
+	var issetId bool = false
 
 	if _, err = iprot.ReadStructBegin(); err != nil {
 		goto ReadStructBeginError
@@ -1231,7 +1238,7 @@ func (p *QueryEventByStuIdRequest) Read(iprot thrift.TProtocol) (err error) {
 
 		switch fieldId {
 		case 1:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I64 {
 				if err = p.ReadField1(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -1240,11 +1247,20 @@ func (p *QueryEventByStuIdRequest) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 2:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.I64 {
 				if err = p.ReadField2(iprot); err != nil {
 					goto ReadFieldError
 				}
 				issetPageSize = true
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 3:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+				issetId = true
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
 				goto SkipFieldError
 			}
@@ -1270,6 +1286,11 @@ func (p *QueryEventByStuIdRequest) Read(iprot thrift.TProtocol) (err error) {
 		fieldId = 2
 		goto RequiredFieldNotSetError
 	}
+
+	if !issetId {
+		fieldId = 3
+		goto RequiredFieldNotSetError
+	}
 	return nil
 ReadStructBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
@@ -1290,8 +1311,8 @@ RequiredFieldNotSetError:
 
 func (p *QueryEventByStuIdRequest) ReadField1(iprot thrift.TProtocol) error {
 
-	var _field string
-	if v, err := iprot.ReadString(); err != nil {
+	var _field int64
+	if v, err := iprot.ReadI64(); err != nil {
 		return err
 	} else {
 		_field = v
@@ -1301,13 +1322,24 @@ func (p *QueryEventByStuIdRequest) ReadField1(iprot thrift.TProtocol) error {
 }
 func (p *QueryEventByStuIdRequest) ReadField2(iprot thrift.TProtocol) error {
 
+	var _field int64
+	if v, err := iprot.ReadI64(); err != nil {
+		return err
+	} else {
+		_field = v
+	}
+	p.PageSize = _field
+	return nil
+}
+func (p *QueryEventByStuIdRequest) ReadField3(iprot thrift.TProtocol) error {
+
 	var _field string
 	if v, err := iprot.ReadString(); err != nil {
 		return err
 	} else {
 		_field = v
 	}
-	p.PageSize = _field
+	p.Id = _field
 	return nil
 }
 
@@ -1324,6 +1356,10 @@ func (p *QueryEventByStuIdRequest) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField2(oprot); err != nil {
 			fieldId = 2
+			goto WriteFieldError
+		}
+		if err = p.writeField3(oprot); err != nil {
+			fieldId = 3
 			goto WriteFieldError
 		}
 	}
@@ -1345,10 +1381,10 @@ WriteStructEndError:
 }
 
 func (p *QueryEventByStuIdRequest) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("page_num", thrift.STRING, 1); err != nil {
+	if err = oprot.WriteFieldBegin("page_num", thrift.I64, 1); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.PageNum); err != nil {
+	if err := oprot.WriteI64(p.PageNum); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1362,10 +1398,10 @@ WriteFieldEndError:
 }
 
 func (p *QueryEventByStuIdRequest) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("page_size", thrift.STRING, 2); err != nil {
+	if err = oprot.WriteFieldBegin("page_size", thrift.I64, 2); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.PageSize); err != nil {
+	if err := oprot.WriteI64(p.PageSize); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1376,6 +1412,23 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
+}
+
+func (p *QueryEventByStuIdRequest) writeField3(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("Id", thrift.STRING, 3); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.Id); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
 }
 
 func (p *QueryEventByStuIdRequest) String() string {

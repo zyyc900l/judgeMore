@@ -20,3 +20,13 @@ func User(user *model.User) *resp.UserInfo {
 		DeletedAt: strconv.FormatInt(user.DeleteAT, 10),
 	}
 }
+func UserList(user []*model.User, total int64) *resp.UserInfoList {
+	result := make([]*resp.UserInfo, 0)
+	for _, v := range user {
+		result = append(result, User(v))
+	}
+	return &resp.UserInfoList{
+		Item:  result,
+		Total: total,
+	}
+}

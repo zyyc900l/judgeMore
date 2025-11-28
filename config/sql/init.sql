@@ -159,12 +159,14 @@ CREATE TABLE `integral_results`  (
 DROP TABLE IF EXISTS `feedbacks`;
 CREATE TABLE `feedbacks`  (
                               `feedback_id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-                              `user_id` bigint NOT NULL COMMENT '提交用户ID',
+                              `user_id` varchar(50) NOT NULL COMMENT '提交用户ID',
                               `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '反馈类型',
                               `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '反馈内容',
                               `is_replied` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否已回复',
                               `reply_content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '回复内容',
-                              `created_time` datetime NOT NULL COMMENT '提交时间',
+                              `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                              `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                              `deleted_at` datetime NULL DEFAULT NULL COMMENT '删除时间',
                               PRIMARY KEY (`feedback_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '存储用户提交的系统使用反馈' ROW_FORMAT = Dynamic;
 

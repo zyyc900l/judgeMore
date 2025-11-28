@@ -89,7 +89,7 @@ func QueryEventByStuIdFile(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(event.QueryEventByStuIdResponse)
-	info, count, err := service.NewEventService(ctx, c).QueryEventByStuId()
+	info, count, err := service.NewEventService(ctx, c).QueryEventByStuId(req.PageSize, req.PageNum, req.Id)
 	if err != nil {
 		pack.SendFailResponse(c, errno.ConvertErr(err))
 		return
