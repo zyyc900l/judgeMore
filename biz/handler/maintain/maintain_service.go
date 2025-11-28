@@ -341,3 +341,25 @@ func UpdateRule(ctx context.Context, c *app.RequestContext) {
 	resp.Base = pack.BuildBaseResp(errno.Success)
 	pack.SendResponse(c, resp)
 }
+
+// QueryUser .
+// @router /api/admin/user/info [GET]
+func QueryUser(ctx context.Context, c *app.RequestContext) {
+	var err error
+	var req maintain.QueryUserRequest
+	err = c.BindAndValidate(&req)
+	if err != nil {
+		pack.SendFailResponse(c, errno.NewErrNo(errno.ParamMissingErrorCode, "param missing:"+err.Error()))
+		return
+	}
+
+	resp := new(maintain.QueryUserResponse)
+	user, count, err := service.NewMaintainService(ctx, c).QueryUserInfo(ctx, &req)
+	if err != nil {
+		pack.SendFailResponse(c, errno.ConvertErr(err))
+		return
+	}
+	resp.Data = pack.UserList(user, count)
+	resp.Base = pack.BuildBaseResp(errno.Success)
+	pack.SendResponse(c, resp)
+}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
 	"judgeMore/biz/dal/mysql"
+	"judgeMore/biz/model/maintain"
 	"judgeMore/biz/service/model"
 	"judgeMore/biz/service/taskqueue"
 	"judgeMore/pkg/constants"
@@ -312,6 +313,93 @@ func (svc *MaintainService) UpdateRule(ctx context.Context, rule *model.ScoreRul
 	}
 	return r, nil
 }
+func (svc *MaintainService) QueryUserInfo(ctx context.Context, req *maintain.QueryUserRequest) ([]*model.User, int64, error) {
+	// 专业——学院——角色
+	var users []*model.User
+	var err error
+
+	if req.GetMajor() == "" && req.GetCollege() == "" && req.GetRole() == "" {
+		users, err = mysql.QueryAllStu(svc.ctx)
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
+	if req.GetCollege() != "" {
+		collegeExist, err := IsCollegeExist(svc.ctx, req.GetCollege())
+		if err != nil {
+			return nil, 0, err
+		}
+		if !collegeExist {
+			return nil, 0, errno.NewErrNo(errno.ServiceCollegeNotExistCode, "college not exist")
+		}
+	}
+
+	if req.GetRole() != "" && !checkRole(req.GetRole()) {
+		return nil, 0, errno.NewErrNo(errno.ServiceRoleNotExist, "role not exist")
+	}
+
+	if req.GetMajor() != "" {
+		users, err = mysql.QueryUserByMajor(svc.ctx, req.GetMajor())
+		if err != nil {
+			return nil, 0, err
+		}
+		if len(users) == 0 {
+			return nil, 0, nil
+		}
+	}
+
+	if req.GetCollege() != "" {
+		if users != nil {
+			filtered := make([]*model.User, 0)
+			for _, user := range users {
+				if user.College == req.GetCollege() {
+					filtered = append(filtered, user)
+				}
+			}
+			users = filtered
+		} else {
+			users, err = mysql.QueryUserByCollege(svc.ctx, req.GetCollege())
+			if err != nil {
+				return nil, 0, err
+			}
+		}
+		if len(users) == 0 {
+			return nil, 0, nil
+		}
+	}
+
+	if req.GetRole() != "" {
+		if users != nil {
+			filtered := make([]*model.User, 0)
+			for _, user := range users {
+				if user.Role == req.GetRole() {
+					filtered = append(filtered, user)
+				}
+			}
+			users = filtered
+		} else {
+			users, err = mysql.QueryUserByRole(svc.ctx, req.GetRole())
+			if err != nil {
+				return nil, 0, err
+			}
+		}
+		if len(users) == 0 {
+			return nil, 0, nil
+		}
+	}
+
+	count := int64(len(users))
+	startIndex := (req.PageNum - 1) * req.PageSize
+	endIndex := startIndex + req.PageSize
+	if startIndex > count {
+		return nil, 0, nil
+	}
+	if endIndex > count {
+		endIndex = count
+	}
+	return users[startIndex:endIndex], count, nil
+}
 
 // 硬编码 如果有兴趣可以进行优化
 func checkRule(eventLevel, awardLevel string) bool {
@@ -320,6 +408,12 @@ func checkRule(eventLevel, awardLevel string) bool {
 		return false
 	}
 	if awardLevel != "特等奖" && awardLevel != "一等奖" && awardLevel != "二等奖" && awardLevel != "三等奖" && awardLevel != "优秀奖" {
+		return false
+	}
+	return true
+}
+func checkRole(role string) bool {
+	if role != "counselor" && role != "student" && role != "admin" {
 		return false
 	}
 	return true

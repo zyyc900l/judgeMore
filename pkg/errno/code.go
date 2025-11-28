@@ -64,6 +64,7 @@ const (
 	ServiceRuleExistCode          // 该条规则已经存在
 	ServiceRuleNotExistCode       // 该条规则不存在
 	ServiceRuleUnDeleteCode       // 尝试删除基本积分计算规则 该条规则的删除会影响积分计算
+	ServiceRoleNotExist           // 角色不存在
 )
 
 // 服务错误

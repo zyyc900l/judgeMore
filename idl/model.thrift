@@ -17,6 +17,10 @@ struct UserInfo{
     10: required string updated_at
     11: required string deleted_at
 }
+struct UserInfoList{
+    1: list<UserInfo> item,
+    2: i64 total,
+}
 struct Event {
     1: string event_id,           // 赛事材料的自增id
     2: string user_id,            // 关联的学生的用户id

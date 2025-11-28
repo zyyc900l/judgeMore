@@ -162,6 +162,17 @@ struct UpdateRuleResponse{
         1: required model.BaseResp base,
         2: required model.Rule data,
 }
+struct QueryUserRequest{
+        1: optional string college,
+        2: optional string major,
+        3: optional string role,
+        4: required i64 page_num,
+        5: required i64 page_size,
+}
+struct QueryUserResponse {
+        1: required model.BaseResp base,
+        2: required model.UserInfoList data,
+}
 service maintainService{
      QueryAllCollegeResponse QueryCollege(1: QueryAllCollegeRequest req) (api.get = "/api/admin/colleges"),
      QueryMajorByCollegeIdResponse QueryMajorByCollegeId(1: QueryMajorByCollegeIdRequest req) (api.get = "/api/admin/majors"),
@@ -176,5 +187,6 @@ service maintainService{
      DeleteRuleResponse DeleteRule(1:DeleteRuleRequest req)(api.delete = "/api/admin/rule/delete"),
      QueryRuleResponse QueryRule(1:QueryRuleRequest req)(api.get = "/api/admin/rule/query"),
      UpdateRuleResponse UpdateRule(1:UpdateRuleRequest req)(api.put="/api/admin/rule/update"),
+     QueryUserResponse QueryUser(1:QueryUserRequest req)(api.get = "/api/admin/user/info"),
 }
 
